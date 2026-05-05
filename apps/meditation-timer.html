@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Meditation Timer</title>
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Meditate">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0a0a0c">
+
+  <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%230a0a0c'/><text x='90' y='118' font-family='Georgia,serif' font-size='90' font-style='italic' fill='%23d4a574' text-anchor='middle'>M</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0a0a0c;
+      --bg-elev: #131316;
+      --paper: #f5f1e8;
+      --paper-dim: #b8b2a4;
+      --paper-faint: #6b665b;
+      --rule: #1f1f23;
+      --accent: #d4a574;
+      --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+      --sans: 'Geist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--paper);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+      mix-blend-mode: overlay;
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: max(env(safe-area-inset-top), 20px) 24px max(env(safe-area-inset-bottom), 32px);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      padding: 16px 0 12px;
+      opacity: 0;
+      animation: fadeRise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    header h1 {
+      font-family: var(--serif);
+      font-weight: 300;
+      font-size: 1.5rem;
+      font-style: italic;
+      color: var(--paper);
+      letter-spacing: -0.01em;
+    }
+
+    header .back-link {
+      display: inline-block;
+      margin-bottom: 8px;
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--paper-faint);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* Main area */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      opacity: 0;
+      animation: fadeRise 0.6s 0.15s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    /* Breathing circle */
+    .breath-wrap {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .breath-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 1px solid var(--rule);
+      transition: border-color 0.6s;
+    }
+
+    .breath-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, var(--accent), #8a6040);
+      opacity: 0.7;
+      transition: opacity 0.4s;
+    }
+
+    .breath-circle.breathing {
+      opacity: 0.85;
+    }
+
+    .breath-label {
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--sans);
+      font-size: 0.65rem;
+      font-weight: 400;
+      color: var(--paper-faint);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* Time display */
+    .time-display {
+      text-align: center;
+    }
+
+    .time-elapsed {
+      font-family: var(--serif);
+      font-size: 3rem;
+      font-weight: 300;
+      color: var(--paper);
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .time-remaining {
+      font-family: var(--serif);
+      font-size: 0.95rem;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--paper-dim);
+      margin-top: 4px;
+    }
+
+    /* Status text */
+    .status-text {
+      font-family: var(--sans);
+      font-size: 0.7rem;
+      font-weight: 400;
+      color: var(--paper-faint);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-align: center;
+      min-height: 1.2em;
+    }
+
+    /* Settings panel */
+    .settings {
+      width: 100%;
+      border-top: 1px solid var(--rule);
+      padding-top: 24px;
+      opacity: 0;
+      animation: fadeRise 0.6s 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    .settings.hidden {
+      display: none;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+
+    .setting-label {
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--paper-dim);
+    }
+
+    .setting-control {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .setting-value {
+      font-family: var(--serif);
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--paper);
+      min-width: 3ch;
+      text-align: center;
+    }
+
+    .btn-adj {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--rule);
+      background: transparent;
+      color: var(--paper-dim);
+      font-family: var(--sans);
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-adj:active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Bell toggles */
+    .bells-section {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .bells-label {
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--paper-dim);
+      margin-bottom: 8px;
+    }
+
+    .bells-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .bell-toggle {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--rule);
+      background: transparent;
+      color: var(--paper-faint);
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      font-weight: 400;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.2s;
+    }
+
+    .bell-toggle.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(212, 165, 116, 0.08);
+    }
+
+    /* Weekly summary */
+    .weekly {
+      text-align: center;
+      padding: 20px 0 8px;
+      opacity: 0;
+      animation: fadeRise 0.6s 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    .weekly-label {
+      font-family: var(--sans);
+      font-size: 0.65rem;
+      font-weight: 400;
+      color: var(--paper-faint);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .weekly-value {
+      font-family: var(--serif);
+      font-size: 1.1rem;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--paper-dim);
+    }
+
+    /* Animations */
+    @keyframes fadeRise {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes breatheIn {
+      from { transform: scale(1); }
+      to   { transform: scale(2.4); }
+    }
+
+    @keyframes breatheOut {
+      from { transform: scale(2.4); }
+      to   { transform: scale(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .breath-circle {
+        transform: scale(1.7) !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="https://mhellermann.github.io/personal-app-store/" class="back-link">&larr; Home</a>
+      <h1>Meditation</h1>
+    </header>
+
+    <div class="main">
+      <div class="breath-wrap" id="tapArea">
+        <div class="breath-ring"></div>
+        <div class="breath-circle" id="breathCircle"></div>
+        <div class="breath-label" id="breathLabel">tap to begin</div>
+      </div>
+
+      <div class="time-display">
+        <div class="time-elapsed" id="elapsed">0:00</div>
+        <div class="time-remaining" id="remaining">20:00 remaining</div>
+      </div>
+
+      <div class="status-text" id="status"></div>
+    </div>
+
+    <div class="settings" id="settingsPanel">
+      <div class="setting-row">
+        <span class="setting-label">Duration</span>
+        <div class="setting-control">
+          <button class="btn-adj" id="durDown">&minus;</button>
+          <span class="setting-value" id="durValue">20m</span>
+          <button class="btn-adj" id="durUp">+</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label">Inhale</span>
+        <div class="setting-control">
+          <button class="btn-adj" id="inhaleDown">&minus;</button>
+          <span class="setting-value" id="inhaleValue">4s</span>
+          <button class="btn-adj" id="inhaleUp">+</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label">Exhale</span>
+        <div class="setting-control">
+          <button class="btn-adj" id="exhaleDown">&minus;</button>
+          <span class="setting-value" id="exhaleValue">4s</span>
+          <button class="btn-adj" id="exhaleUp">+</button>
+        </div>
+      </div>
+
+      <div class="bells-section">
+        <div class="bells-label">Interval bells</div>
+        <div class="bells-row">
+          <button class="bell-toggle" data-bell="5">5 min</button>
+          <button class="bell-toggle" data-bell="10">10 min</button>
+          <button class="bell-toggle" data-bell="15">15 min</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="weekly">
+      <div class="weekly-label">This week</div>
+      <div class="weekly-value" id="weeklyTotal">0 minutes</div>
+    </div>
+  </div>
+
+  <script>
+    /* ── State ── */
+    let duration = 20;        // minutes
+    let inhaleLen = 4;        // seconds
+    let exhaleLen = 4;        // seconds
+    let bells = { 5: false, 10: false, 15: false };
+    let timerState = 'idle';  // idle | running | paused
+    let elapsedSec = 0;
+    let intervalId = null;
+    let breathAnimId = null;
+    let wakeLock = null;
+    let bellsFired = {};
+
+    /* ── Load settings ── */
+    function loadSettings() {
+      try {
+        const s = JSON.parse(localStorage.getItem('med_settings'));
+        if (s) {
+          duration = s.duration || 20;
+          inhaleLen = s.inhaleLen || 4;
+          exhaleLen = s.exhaleLen || 4;
+          bells = s.bells || { 5: false, 10: false, 15: false };
+        }
+      } catch(e) {}
+    }
+
+    function saveSettings() {
+      localStorage.setItem('med_settings', JSON.stringify({
+        duration, inhaleLen, exhaleLen, bells
+      }));
+    }
+
+    /* ── DOM refs ── */
+    const tapArea = document.getElementById('tapArea');
+    const breathCircle = document.getElementById('breathCircle');
+    const breathLabel = document.getElementById('breathLabel');
+    const elapsedEl = document.getElementById('elapsed');
+    const remainingEl = document.getElementById('remaining');
+    const statusEl = document.getElementById('status');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const durValueEl = document.getElementById('durValue');
+    const inhaleValueEl = document.getElementById('inhaleValue');
+    const exhaleValueEl = document.getElementById('exhaleValue');
+    const weeklyEl = document.getElementById('weeklyTotal');
+
+    /* ── Format time ── */
+    function fmt(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return m + ':' + String(s).padStart(2, '0');
+    }
+
+    /* ── Render UI ── */
+    function renderSettings() {
+      durValueEl.textContent = duration + 'm';
+      inhaleValueEl.textContent = inhaleLen + 's';
+      exhaleValueEl.textContent = exhaleLen + 's';
+      remainingEl.textContent = fmt(duration * 60) + ' remaining';
+
+      document.querySelectorAll('.bell-toggle').forEach(btn => {
+        const m = parseInt(btn.dataset.bell);
+        btn.classList.toggle('active', !!bells[m]);
+      });
+    }
+
+    function renderTime() {
+      elapsedEl.textContent = fmt(elapsedSec);
+      const rem = Math.max(0, duration * 60 - elapsedSec);
+      remainingEl.textContent = fmt(rem) + ' remaining';
+    }
+
+    /* ── Web Audio bell ── */
+    let audioCtx = null;
+    function ensureAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playBell() {
+      ensureAudio();
+      const now = audioCtx.currentTime;
+
+      // Layer two sine tones for a richer bowl-like sound
+      [396, 528].forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.25, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + i * 0.08);
+        osc.stop(now + 3.5);
+      });
+    }
+
+    function playEndBell() {
+      ensureAudio();
+      const now = audioCtx.currentTime;
+      // Three-strike ending bell
+      [0, 0.8, 1.6].forEach(delay => {
+        [396, 528, 660].forEach((freq, i) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0, now + delay);
+          gain.gain.linearRampToValueAtTime(0.2, now + delay + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 2.5);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + delay + i * 0.06);
+          osc.stop(now + delay + 3);
+        });
+      });
+    }
+
+    /* ── Breathing animation ── */
+    let breathPhase = 'in'; // in | out
+    let breathStart = 0;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function animateBreath(ts) {
+      if (timerState !== 'running') return;
+
+      if (!breathStart) breathStart = ts;
+      const elapsed = (ts - breathStart) / 1000;
+      const currentLen = breathPhase === 'in' ? inhaleLen : exhaleLen;
+
+      let progress = Math.min(elapsed / currentLen, 1);
+      // Ease in-out
+      progress = progress < 0.5
+        ? 2 * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+      let scale;
+      if (breathPhase === 'in') {
+        scale = 1 + 1.4 * progress;
+        breathLabel.textContent = 'inhale';
+      } else {
+        scale = 2.4 - 1.4 * progress;
+        breathLabel.textContent = 'exhale';
+      }
+
+      if (!reducedMotion) {
+        breathCircle.style.transform = 'scale(' + scale + ')';
+      }
+
+      if (elapsed >= currentLen) {
+        breathPhase = breathPhase === 'in' ? 'out' : 'in';
+        breathStart = ts;
+      }
+
+      breathAnimId = requestAnimationFrame(animateBreath);
+    }
+
+    function startBreathing() {
+      breathCircle.classList.add('breathing');
+      breathPhase = 'in';
+      breathStart = 0;
+      breathAnimId = requestAnimationFrame(animateBreath);
+    }
+
+    function stopBreathing() {
+      breathCircle.classList.remove('breathing');
+      if (breathAnimId) cancelAnimationFrame(breathAnimId);
+      breathAnimId = null;
+      if (!reducedMotion) {
+        breathCircle.style.transform = 'scale(1)';
+      }
+      breathLabel.textContent = timerState === 'paused' ? 'tap to resume' : 'tap to begin';
+    }
+
+    /* ── Wake Lock ── */
+    async function acquireWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLock.addEventListener('release', () => { wakeLock = null; });
+        }
+      } catch(e) {}
+    }
+
+    function releaseWakeLock() {
+      if (wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+      }
+    }
+
+    // Re-acquire on visibility change
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && timerState === 'running') {
+        acquireWakeLock();
+      }
+    });
+
+    /* ── Timer logic ── */
+    function startTimer() {
+      ensureAudio();
+      timerState = 'running';
+      settingsPanel.classList.add('hidden');
+      statusEl.textContent = '';
+      bellsFired = {};
+      acquireWakeLock();
+      startBreathing();
+
+      intervalId = setInterval(() => {
+        elapsedSec++;
+        renderTime();
+
+        // Check bells
+        const elapsedMin = elapsedSec / 60;
+        [5, 10, 15].forEach(m => {
+          if (bells[m] && elapsedMin >= m && !bellsFired[m] && m < duration) {
+            bellsFired[m] = true;
+            playBell();
+          }
+        });
+
+        // Session complete
+        if (elapsedSec >= duration * 60) {
+          completeSession();
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      timerState = 'paused';
+      clearInterval(intervalId);
+      intervalId = null;
+      stopBreathing();
+      releaseWakeLock();
+      statusEl.textContent = 'paused';
+      breathLabel.textContent = 'tap to resume';
+    }
+
+    function resumeTimer() {
+      timerState = 'running';
+      statusEl.textContent = '';
+      acquireWakeLock();
+      startBreathing();
+
+      intervalId = setInterval(() => {
+        elapsedSec++;
+        renderTime();
+
+        const elapsedMin = elapsedSec / 60;
+        [5, 10, 15].forEach(m => {
+          if (bells[m] && elapsedMin >= m && !bellsFired[m] && m < duration) {
+            bellsFired[m] = true;
+            playBell();
+          }
+        });
+
+        if (elapsedSec >= duration * 60) {
+          completeSession();
+        }
+      }, 1000);
+    }
+
+    function resetTimer() {
+      timerState = 'idle';
+      clearInterval(intervalId);
+      intervalId = null;
+      elapsedSec = 0;
+      stopBreathing();
+      releaseWakeLock();
+      renderTime();
+      settingsPanel.classList.remove('hidden');
+      statusEl.textContent = '';
+      breathLabel.textContent = 'tap to begin';
+    }
+
+    function completeSession() {
+      clearInterval(intervalId);
+      intervalId = null;
+      timerState = 'idle';
+      stopBreathing();
+      releaseWakeLock();
+      playEndBell();
+      statusEl.textContent = 'session complete';
+      breathLabel.textContent = 'tap to begin';
+
+      // Log session
+      logSession(duration);
+      elapsedSec = 0;
+      renderTime();
+      updateWeekly();
+
+      // Show settings after a beat
+      setTimeout(() => {
+        settingsPanel.classList.remove('hidden');
+        statusEl.textContent = '';
+      }, 4000);
+    }
+
+    /* ── Tap / long-press handling ── */
+    let pressTimer = null;
+    let pressStartTime = 0;
+    let didLongPress = false;
+
+    tapArea.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      pressStartTime = Date.now();
+      didLongPress = false;
+
+      pressTimer = setTimeout(() => {
+        didLongPress = true;
+        // Long press: reset
+        if (timerState !== 'idle') {
+          resetTimer();
+          // Haptic feedback if available
+          if (navigator.vibrate) navigator.vibrate(30);
+        }
+      }, 500);
+    });
+
+    tapArea.addEventListener('pointerup', (e) => {
+      e.preventDefault();
+      clearTimeout(pressTimer);
+
+      if (didLongPress) return;
+
+      // Short tap
+      if (timerState === 'idle') {
+        startTimer();
+      } else if (timerState === 'running') {
+        pauseTimer();
+      } else if (timerState === 'paused') {
+        resumeTimer();
+      }
+    });
+
+    tapArea.addEventListener('pointerleave', () => {
+      clearTimeout(pressTimer);
+    });
+
+    tapArea.addEventListener('pointercancel', () => {
+      clearTimeout(pressTimer);
+    });
+
+    // Prevent context menu on long press
+    tapArea.addEventListener('contextmenu', e => e.preventDefault());
+
+    /* ── Settings controls ── */
+    document.getElementById('durDown').addEventListener('click', () => {
+      if (duration > 5) { duration -= 5; saveSettings(); renderSettings(); renderTime(); }
+    });
+    document.getElementById('durUp').addEventListener('click', () => {
+      if (duration < 60) { duration += 5; saveSettings(); renderSettings(); renderTime(); }
+    });
+
+    document.getElementById('inhaleDown').addEventListener('click', () => {
+      if (inhaleLen > 1) { inhaleLen--; saveSettings(); renderSettings(); }
+    });
+    document.getElementById('inhaleUp').addEventListener('click', () => {
+      if (inhaleLen < 10) { inhaleLen++; saveSettings(); renderSettings(); }
+    });
+
+    document.getElementById('exhaleDown').addEventListener('click', () => {
+      if (exhaleLen > 1) { exhaleLen--; saveSettings(); renderSettings(); }
+    });
+    document.getElementById('exhaleUp').addEventListener('click', () => {
+      if (exhaleLen < 10) { exhaleLen++; saveSettings(); renderSettings(); }
+    });
+
+    document.querySelectorAll('.bell-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const m = parseInt(btn.dataset.bell);
+        bells[m] = !bells[m];
+        saveSettings();
+        renderSettings();
+      });
+    });
+
+    /* ── Session log ── */
+    function getLog() {
+      try {
+        return JSON.parse(localStorage.getItem('med_log')) || [];
+      } catch(e) { return []; }
+    }
+
+    function logSession(mins) {
+      const log = getLog();
+      log.push({ date: new Date().toISOString(), minutes: mins });
+      localStorage.setItem('med_log', JSON.stringify(log));
+    }
+
+    function updateWeekly() {
+      const log = getLog();
+      const now = new Date();
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - now.getDay());
+      weekStart.setHours(0, 0, 0, 0);
+
+      let total = 0;
+      log.forEach(entry => {
+        if (new Date(entry.date) >= weekStart) {
+          total += entry.minutes;
+        }
+      });
+
+      if (total === 0) {
+        weeklyEl.textContent = 'no sessions yet';
+      } else if (total === 1) {
+        weeklyEl.textContent = '1 minute';
+      } else {
+        weeklyEl.textContent = total + ' minutes';
+      }
+    }
+
+    /* ── Init ── */
+    loadSettings();
+    renderSettings();
+    renderTime();
+    updateWeekly();
+  </script>
+</body>
+</html>
