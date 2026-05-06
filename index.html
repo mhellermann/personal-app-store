@@ -13,10 +13,10 @@
   <meta name="theme-color" content="#0a0a0c">
   <meta name="description" content="Michael's personal app collection">
 
-  <!-- Apple touch icon: inline SVG, no separate file needed -->
+  <!-- Apple touch icon -->
   <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%230a0a0c'/><text x='90' y='118' font-family='Georgia,serif' font-size='90' font-style='italic' fill='%23d4a574' text-anchor='middle'>M</text></svg>">
 
-  <!-- Typography: editorial serif + modern grotesque -->
+  <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -30,6 +30,8 @@
       --paper-faint: #6b665b;
       --rule: #1f1f23;
       --accent: #d4a574;
+      --accent-glow: rgba(212, 165, 116, 0.25);
+      --danger: #c45c5c;
       --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
       --sans: 'Geist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     }
@@ -47,7 +49,6 @@
       overflow-x: hidden;
     }
 
-    /* Subtle grain overlay for paper-like texture */
     body::before {
       content: '';
       position: fixed;
@@ -95,6 +96,27 @@
       vertical-align: middle;
       box-shadow: 0 0 8px var(--accent);
     }
+
+    .meta-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .settings-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--paper-faint);
+      padding: 4px;
+      border-radius: 6px;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    .settings-btn:hover { color: var(--accent); }
+    .settings-btn svg { width: 16px; height: 16px; }
+    .settings-btn.configured svg { color: var(--accent); opacity: 0.7; }
 
     .greeting {
       font-family: var(--serif);
@@ -303,6 +325,366 @@
       font-weight: 400;
     }
 
+    /* ============================================
+       MODAL SYSTEM
+       ============================================ */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    @media (min-width: 540px) {
+      .modal-backdrop { align-items: center; padding: 24px; }
+    }
+
+    .modal {
+      background: var(--bg-elev);
+      border: 1px solid var(--rule);
+      border-radius: 24px 24px 0 0;
+      width: 100%;
+      max-width: 560px;
+      max-height: 92dvh;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 28px 24px max(env(safe-area-inset-bottom, 24px), 24px);
+      animation: slideUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    @media (min-width: 540px) {
+      .modal { border-radius: 24px; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--rule);
+      border-radius: 2px;
+      margin: 0 auto 20px;
+    }
+    @media (min-width: 540px) { .modal-handle { display: none; } }
+
+    .modal-title {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-style: italic;
+      font-size: 22px;
+      color: var(--paper);
+      margin-bottom: 4px;
+    }
+
+    .modal-sub {
+      font-size: 13px;
+      color: var(--paper-faint);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: var(--paper-faint);
+      cursor: pointer;
+      font-size: 20px;
+      padding: 4px 8px;
+      border-radius: 8px;
+    }
+    .modal-close:hover { color: var(--paper); }
+
+    /* FORM ELEMENTS */
+    .field-group { margin-bottom: 20px; }
+
+    .field-label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--paper-faint);
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .field-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      color: var(--paper);
+      font-family: var(--sans);
+      font-size: 15px;
+      padding: 14px 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .field-input:focus { border-color: var(--accent); }
+    .field-input::placeholder { color: var(--paper-faint); }
+
+    textarea.field-input {
+      resize: vertical;
+      min-height: 120px;
+      line-height: 1.5;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      border-radius: 14px;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      filter: none;
+    }
+
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--paper-dim);
+      border: 1px solid var(--rule);
+    }
+    .btn-secondary:hover { border-color: var(--paper-faint); color: var(--paper); }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(196, 92, 92, 0.3);
+    }
+    .btn-danger:hover { background: rgba(196, 92, 92, 0.1); }
+
+    .btn-full { width: 100%; }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .btn-row .btn { flex: 1; }
+
+    /* VOICE BUTTON */
+    .voice-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .voice-row textarea { flex: 1; }
+
+    .btn-voice {
+      width: 52px;
+      min-height: 52px;
+      border-radius: 12px;
+      background: var(--bg);
+      border: 1px solid var(--rule);
+      color: var(--paper-faint);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .btn-voice:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-voice.recording {
+      border-color: var(--danger);
+      color: var(--danger);
+      animation: pulse-ring 1.5s ease-in-out infinite;
+    }
+    .btn-voice svg { width: 20px; height: 20px; }
+
+    @keyframes pulse-ring {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(196, 92, 92, 0.3); }
+      50% { box-shadow: 0 0 0 6px rgba(196, 92, 92, 0); }
+    }
+
+    /* STEP INDICATOR */
+    .steps {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+    .step-dot {
+      height: 3px;
+      flex: 1;
+      border-radius: 2px;
+      background: var(--rule);
+      transition: background 0.3s;
+    }
+    .step-dot.active { background: var(--accent); }
+    .step-dot.done { background: var(--paper-faint); }
+
+    /* PREVIEW AREA */
+    .preview-frame {
+      width: 100%;
+      height: 320px;
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .preview-frame iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* CODE TOGGLE */
+    .code-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      margin-bottom: 12px;
+      font-size: 11px;
+      color: var(--paper-faint);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: var(--sans);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .code-toggle:hover { color: var(--paper-dim); }
+    .code-toggle svg {
+      width: 12px; height: 12px;
+      transition: transform 0.2s;
+    }
+    .code-toggle.expanded svg { transform: rotate(90deg); }
+
+    .code-preview {
+      display: none;
+      max-height: 200px;
+      overflow: auto;
+      background: var(--bg);
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+      padding: 14px;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--paper-dim);
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin-bottom: 16px;
+    }
+    .code-preview.visible { display: block; }
+
+    /* STATUS / PROGRESS */
+    .status-log {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--paper-faint);
+      line-height: 1.8;
+    }
+    .status-log .log-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .log-line .spinner {
+      width: 12px; height: 12px;
+      border: 2px solid var(--rule);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .log-line .check { color: var(--accent); font-size: 14px; }
+    .log-line .fail { color: var(--danger); font-size: 14px; }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-box {
+      background: rgba(196, 92, 92, 0.1);
+      border: 1px solid rgba(196, 92, 92, 0.25);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--danger);
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+
+    /* SETTINGS SPECIFIC */
+    .key-field {
+      position: relative;
+    }
+    .key-field input {
+      padding-right: 44px;
+    }
+    .key-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--paper-faint);
+      cursor: pointer;
+      padding: 4px;
+    }
+    .key-toggle:hover { color: var(--paper); }
+    .key-toggle svg { width: 16px; height: 16px; }
+
+    .key-status {
+      font-size: 11px;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .key-status.ok { color: var(--accent); }
+    .key-status.missing { color: var(--paper-faint); }
+
+    /* TILE METADATA (for generated apps) */
+    .tile .generated-badge {
+      position: absolute;
+      bottom: 44px;
+      right: 16px;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.5;
+    }
+
     /* Stagger entrance */
     .tile, .greeting, .subtitle, .section-label, .meta-row {
       opacity: 0;
@@ -312,12 +694,6 @@
     .greeting { animation-delay: 0.15s; }
     .subtitle { animation-delay: 0.25s; }
     .section-label { animation-delay: 0.4s; }
-    .grid .tile:nth-child(1) { animation-delay: 0.5s; }
-    .grid .tile:nth-child(2) { animation-delay: 0.58s; }
-    .grid .tile:nth-child(3) { animation-delay: 0.66s; }
-    .grid .tile:nth-child(4) { animation-delay: 0.74s; }
-    .grid .tile:nth-child(5) { animation-delay: 0.82s; }
-    .grid .tile:nth-child(6) { animation-delay: 0.9s; }
 
     @keyframes rise {
       from { opacity: 0; transform: translateY(14px); }
@@ -334,7 +710,14 @@
     <header>
       <div class="meta-row">
         <span><span class="dot"></span><span id="date-line">—</span></span>
-        <span>Newport Beach</span>
+        <span class="meta-right">
+          <span>Newport Beach</span>
+          <button class="settings-btn" id="settings-btn" title="Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+        </span>
       </div>
       <h1 class="greeting" id="greeting">Good <em>evening</em>, Michael.</h1>
       <p class="subtitle">Your personal app store. A curated shelf of tools, custom-built.</p>
@@ -350,17 +733,184 @@
 
     <footer>
       <span>Built locally · No App Store</span>
-      <em>v1.0</em>
+      <em>v2.0</em>
     </footer>
+  </div>
+
+  <!-- =============================================
+       SETTINGS MODAL
+       ============================================= -->
+  <div class="modal-backdrop" id="settings-modal">
+    <div class="modal" style="position:relative;">
+      <div class="modal-handle"></div>
+      <button class="modal-close" onclick="closeModal('settings-modal')">&times;</button>
+      <h3 class="modal-title">Settings</h3>
+      <p class="modal-sub">API keys are stored in localStorage on this device only. Never committed to the repo.</p>
+
+      <div class="field-group">
+        <label class="field-label">Anthropic API Key</label>
+        <div class="key-field">
+          <input type="password" class="field-input" id="key-anthropic" placeholder="sk-ant-...">
+          <button class="key-toggle" onclick="toggleKeyVis('key-anthropic')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="key-status missing" id="status-anthropic">Not configured</div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">GitHub Personal Access Token</label>
+        <div class="key-field">
+          <input type="password" class="field-input" id="key-github" placeholder="github_pat_...">
+          <button class="key-toggle" onclick="toggleKeyVis('key-github')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="key-status missing" id="status-github">Not configured</div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">GitHub Repo</label>
+        <input type="text" class="field-input" id="key-repo" placeholder="mhellermann/personal-app-store" value="mhellermann/personal-app-store">
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary btn-full" onclick="saveSettings()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================================
+       CREATE APP MODAL
+       ============================================= -->
+  <div class="modal-backdrop" id="create-modal">
+    <div class="modal" style="position:relative;">
+      <div class="modal-handle"></div>
+      <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+
+      <div class="steps">
+        <div class="step-dot" id="step-1"></div>
+        <div class="step-dot" id="step-2"></div>
+        <div class="step-dot" id="step-3"></div>
+      </div>
+
+      <!-- STEP 1: DESCRIBE -->
+      <div id="create-step-1">
+        <h3 class="modal-title">New App</h3>
+        <p class="modal-sub">Describe what you want built. Be specific — functionality, layout, data it should track. Dictate or type.</p>
+
+        <div class="field-group">
+          <label class="field-label">App Name</label>
+          <input type="text" class="field-input" id="app-name" placeholder="e.g. Trade Journal">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Short Description (for tile)</label>
+          <input type="text" class="field-input" id="app-desc" placeholder="e.g. Futures log">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Category</label>
+          <input type="text" class="field-input" id="app-category" placeholder="e.g. Trading, Health, Creative">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">What should this app do?</label>
+          <div class="voice-row">
+            <textarea class="field-input" id="app-prompt" placeholder="Describe the app in detail. What does it track? What interactions? What should it look like? The more detail, the better the result."></textarea>
+            <button class="btn-voice" id="voice-btn" title="Dictate">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" id="generate-btn" onclick="startGeneration()">Generate with Claude</button>
+      </div>
+
+      <!-- STEP 2: GENERATING / PREVIEW -->
+      <div id="create-step-2" style="display:none;">
+        <h3 class="modal-title">Building</h3>
+        <p class="modal-sub" id="gen-sub">Claude is writing your app…</p>
+
+        <div class="status-log" id="gen-log"></div>
+
+        <div id="preview-area" style="display:none;">
+          <div class="preview-frame">
+            <iframe id="preview-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
+          <button class="code-toggle" id="code-toggle-btn" onclick="toggleCode()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            View source
+          </button>
+          <div class="code-preview" id="code-preview"></div>
+
+          <div class="field-group" style="margin-top:8px;">
+            <label class="field-label">Revision notes (optional)</label>
+            <div class="voice-row">
+              <textarea class="field-input" id="revision-prompt" placeholder="e.g. Make the colors darker, add a reset button, change the layout to…" style="min-height:60px;"></textarea>
+              <button class="btn-voice" id="voice-btn-revise" title="Dictate">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-secondary" onclick="reviseApp()">Revise</button>
+            <button class="btn btn-primary" onclick="startDeploy()">Deploy to GitHub</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: DEPLOYING -->
+      <div id="create-step-3" style="display:none;">
+        <h3 class="modal-title">Deploying</h3>
+        <p class="modal-sub">Committing to your repo and updating the launcher…</p>
+
+        <div class="status-log" id="deploy-log"></div>
+        <div id="deploy-done" style="display:none;">
+          <div class="btn-row">
+            <button class="btn btn-primary btn-full" onclick="finishCreate()">Done</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <script>
     /* ==========================================================
-       EDIT THIS ARRAY TO ADD / REMOVE / RENAME APPS
-       Each app needs: name, desc, url, monogram, category, gradient
-       Replace REPLACE_WITH_YOUR_URL with the actual deployed URL.
+       CONFIGURATION
        ========================================================== */
-    const APPS = [
+    const GITHUB_API = 'https://api.github.com';
+    const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
+    const BRANCH = 'main';
+
+    /* Gradient palette for new tiles */
+    const GRADIENTS = [
+      "linear-gradient(135deg, #1a1f2e 0%, #2a3a55 60%, #3d5278 100%)",
+      "linear-gradient(135deg, #2a1a2e 0%, #4a2a55 60%, #6d3d78 100%)",
+      "linear-gradient(135deg, #1a2a2e 0%, #2a4a55 60%, #3d6878 100%)",
+      "linear-gradient(135deg, #2e1a1a 0%, #553a2a 60%, #78523d 100%)",
+      "linear-gradient(135deg, #1a2e1f 0%, #2a553a 60%, #3d784a 100%)",
+      "linear-gradient(135deg, #2e2a1a 0%, #554a2a 60%, #78683d 100%)",
+      "linear-gradient(135deg, #1a1a2e 0%, #2a2a55 60%, #3d3d78 100%)",
+    ];
+
+    /* ==========================================================
+       APP REGISTRY — the master list. Persisted apps from GitHub
+       are merged in at load time.
+       ========================================================== */
+    const SEED_APPS = [
       {
         name: "Idea Machine",
         desc: "Daily 10 ideas",
@@ -380,55 +930,65 @@
       {
         name: "Meditation Timer",
         desc: "Sit, breathe, be still",
-        url: "https://mhellermann.github.io/personal-app-store/apps/meditation-timer.html",
+        url: "apps/meditation-timer.html",
         monogram: "M",
         category: "Wellness",
         gradient: "linear-gradient(135deg, #0f1a1a 0%, #1e3a35 60%, #2d5a4a 100%)"
       },
-      // Add more apps here as you build them. Examples:
-      // {
-      //   name: "Trade Journal",
-      //   desc: "Futures log",
-      //   url: "https://...",
-      //   monogram: "T",
-      //   category: "Trading",
-      //   gradient: "linear-gradient(135deg, #1a1f2e 0%, #2a3a55 60%, #3d5278 100%)"
-      // },
     ];
 
-    /* -------- RENDER -------- */
-    const grid = document.getElementById('grid');
-    const countEl = document.getElementById('app-count');
+    /* Locally-created apps (survived between page loads, separate from SEED) */
+    function getLocalApps() {
+      try { return JSON.parse(localStorage.getItem('pas_local_apps') || '[]'); }
+      catch { return []; }
+    }
+    function saveLocalApps(apps) {
+      localStorage.setItem('pas_local_apps', JSON.stringify(apps));
+    }
 
-    APPS.forEach(app => {
-      const a = document.createElement('a');
-      a.className = 'tile';
-      a.href = app.url;
-      a.style.setProperty('--tile-gradient', app.gradient);
-      a.target = '_self';
-      a.innerHTML = `
-        <span class="category">${app.category}</span>
-        <span class="monogram">${app.monogram}</span>
-        <span class="label">
-          <span class="name">${app.name}</span>
-          <span class="desc">${app.desc}</span>
-        </span>
-      `;
-      grid.appendChild(a);
-    });
+    let APPS = [...SEED_APPS, ...getLocalApps()];
 
-    // "Add new" tile (placeholder for phase 2 — ask Claude to build a new app)
-    const addTile = document.createElement('div');
-    addTile.className = 'tile add';
-    addTile.innerHTML = `<span class="plus">+</span><span class="add-label">New App</span>`;
-    addTile.addEventListener('click', () => {
-      alert('Phase 2: this will prompt Claude to build a new app and add it to the library. For now, edit the APPS array in this file and redeploy.');
-    });
-    grid.appendChild(addTile);
+    /* ==========================================================
+       RENDER GRID
+       ========================================================== */
+    function renderGrid() {
+      const grid = document.getElementById('grid');
+      const countEl = document.getElementById('app-count');
+      grid.innerHTML = '';
 
-    countEl.textContent = APPS.length === 1 ? '1 app' : `${APPS.length} apps`;
+      APPS.forEach((app, i) => {
+        const a = document.createElement('a');
+        a.className = 'tile';
+        a.href = app.url;
+        a.style.setProperty('--tile-gradient', app.gradient);
+        a.target = '_self';
+        a.style.animationDelay = `${0.5 + i * 0.08}s`;
+        a.innerHTML = `
+          <span class="category">${app.category}</span>
+          <span class="monogram">${app.monogram}</span>
+          <span class="label">
+            <span class="name">${app.name}</span>
+            <span class="desc">${app.desc}</span>
+          </span>
+        `;
+        grid.appendChild(a);
+      });
 
-    /* -------- DATE & GREETING -------- */
+      const addTile = document.createElement('div');
+      addTile.className = 'tile add';
+      addTile.style.animationDelay = `${0.5 + APPS.length * 0.08}s`;
+      addTile.innerHTML = `<span class="plus">+</span><span class="add-label">New App</span>`;
+      addTile.addEventListener('click', openCreateModal);
+      grid.appendChild(addTile);
+
+      countEl.textContent = APPS.length === 1 ? '1 app' : `${APPS.length} apps`;
+    }
+
+    renderGrid();
+
+    /* ==========================================================
+       DATE & GREETING
+       ========================================================== */
     const now = new Date();
     const hour = now.getHours();
     let timeOfDay = 'evening';
@@ -439,9 +999,466 @@
     else timeOfDay = 'night';
 
     document.getElementById('greeting').innerHTML = `Good <em>${timeOfDay}</em>, Michael.`;
+    document.getElementById('date-line').textContent =
+      now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-    const dateOpts = { weekday: 'long', month: 'long', day: 'numeric' };
-    document.getElementById('date-line').textContent = now.toLocaleDateString('en-US', dateOpts);
+    /* ==========================================================
+       SETTINGS
+       ========================================================== */
+    function getKey(k) { return localStorage.getItem('pas_' + k) || ''; }
+    function setKey(k, v) { localStorage.setItem('pas_' + k, v); }
+
+    function loadSettings() {
+      document.getElementById('key-anthropic').value = getKey('anthropic_key');
+      document.getElementById('key-github').value = getKey('github_pat');
+      document.getElementById('key-repo').value = getKey('github_repo') || 'mhellermann/personal-app-store';
+      updateKeyStatuses();
+    }
+
+    function updateKeyStatuses() {
+      const aKey = getKey('anthropic_key');
+      const gKey = getKey('github_pat');
+      const aEl = document.getElementById('status-anthropic');
+      const gEl = document.getElementById('status-github');
+
+      aEl.textContent = aKey ? '✓ Configured' : 'Not configured';
+      aEl.className = 'key-status ' + (aKey ? 'ok' : 'missing');
+      gEl.textContent = gKey ? '✓ Configured' : 'Not configured';
+      gEl.className = 'key-status ' + (gKey ? 'ok' : 'missing');
+
+      const btn = document.getElementById('settings-btn');
+      btn.className = 'settings-btn' + (aKey && gKey ? ' configured' : '');
+    }
+
+    function saveSettings() {
+      setKey('anthropic_key', document.getElementById('key-anthropic').value.trim());
+      setKey('github_pat', document.getElementById('key-github').value.trim());
+      setKey('github_repo', document.getElementById('key-repo').value.trim());
+      updateKeyStatuses();
+      closeModal('settings-modal');
+    }
+
+    function toggleKeyVis(id) {
+      const input = document.getElementById(id);
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    document.getElementById('settings-btn').addEventListener('click', () => {
+      loadSettings();
+      openModal('settings-modal');
+    });
+
+    loadSettings();
+    updateKeyStatuses();
+
+    /* ==========================================================
+       MODAL HELPERS
+       ========================================================== */
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    /* Backdrop click to close */
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+      backdrop.addEventListener('click', e => {
+        if (e.target === backdrop) backdrop.classList.remove('open');
+      });
+    });
+
+    /* ==========================================================
+       CREATE FLOW — STATE
+       ========================================================== */
+    let generatedHTML = '';
+    let conversationHistory = [];
+
+    function openCreateModal() {
+      if (!getKey('anthropic_key') || !getKey('github_pat')) {
+        loadSettings();
+        openModal('settings-modal');
+        return;
+      }
+      resetCreateModal();
+      openModal('create-modal');
+    }
+
+    function closeCreateModal() {
+      closeModal('create-modal');
+    }
+
+    function resetCreateModal() {
+      document.getElementById('app-name').value = '';
+      document.getElementById('app-desc').value = '';
+      document.getElementById('app-category').value = '';
+      document.getElementById('app-prompt').value = '';
+      document.getElementById('revision-prompt').value = '';
+      generatedHTML = '';
+      conversationHistory = [];
+      showStep(1);
+    }
+
+    function showStep(n) {
+      [1, 2, 3].forEach(i => {
+        document.getElementById(`create-step-${i}`).style.display = i === n ? 'block' : 'none';
+        const dot = document.getElementById(`step-${i}`);
+        dot.className = 'step-dot' + (i < n ? ' done' : i === n ? ' active' : '');
+      });
+    }
+
+    /* ==========================================================
+       VOICE DICTATION (Web Speech API)
+       ========================================================== */
+    function setupVoice(btnId, targetId) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) { btn.style.display = 'none'; return; }
+
+      let recognition = null;
+      let isRecording = false;
+
+      btn.addEventListener('click', () => {
+        if (isRecording) {
+          recognition.stop();
+          return;
+        }
+        recognition = new SR();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        const target = document.getElementById(targetId);
+        const existing = target.value;
+
+        recognition.onresult = (e) => {
+          let interim = '', final = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            if (e.results[i].isFinal) final += e.results[i][0].transcript;
+            else interim += e.results[i][0].transcript;
+          }
+          if (final) {
+            target.value = (existing ? existing + ' ' : '') + final;
+          }
+        };
+        recognition.onend = () => {
+          isRecording = false;
+          btn.classList.remove('recording');
+        };
+        recognition.onerror = () => {
+          isRecording = false;
+          btn.classList.remove('recording');
+        };
+
+        recognition.start();
+        isRecording = true;
+        btn.classList.add('recording');
+      });
+    }
+
+    setupVoice('voice-btn', 'app-prompt');
+    setupVoice('voice-btn-revise', 'revision-prompt');
+
+    /* ==========================================================
+       ANTHROPIC API — GENERATE APP
+       ========================================================== */
+    function logLine(containerId, text, type = 'spin') {
+      const container = document.getElementById(containerId);
+      const line = document.createElement('div');
+      line.className = 'log-line';
+      if (type === 'spin') line.innerHTML = `<span class="spinner"></span> ${text}`;
+      else if (type === 'ok') line.innerHTML = `<span class="check">✓</span> ${text}`;
+      else if (type === 'fail') line.innerHTML = `<span class="fail">✗</span> ${text}`;
+      container.appendChild(line);
+      return line;
+    }
+
+    function updateLogLine(line, text, type) {
+      if (type === 'ok') line.innerHTML = `<span class="check">✓</span> ${text}`;
+      else if (type === 'fail') line.innerHTML = `<span class="fail">✗</span> ${text}`;
+    }
+
+    const SYSTEM_PROMPT = `You are a frontend engineer building single-file HTML apps for a personal PWA app store.
+
+REQUIREMENTS — follow these exactly:
+1. Output ONLY the complete HTML file. No explanation, no markdown fences, no commentary. Start with <!DOCTYPE html> and end with </html>.
+2. The app must be a single self-contained .html file — inline all CSS and JS.
+3. Use localStorage for any data persistence. Namespace keys with a prefix derived from the app name.
+4. Mobile-first, responsive design. Must work beautifully on iPhone (375px viewport) and desktop.
+5. Dark theme by default: background #0a0a0c, text #f5f1e8, accent #d4a574. Use this palette unless the user specifies otherwise.
+6. Use clean, modern typography. Google Fonts are fine (via CDN link).
+7. Add a small back-arrow (←) link in the top-left that navigates to "../" (the launcher).
+8. No external JS frameworks unless explicitly requested. Vanilla JS preferred.
+9. The app should be production-quality — not a prototype. Handle edge cases, empty states, and errors gracefully.
+10. Include a <title> tag with the app name.
+11. Include viewport meta tag and apple-mobile-web-app-capable meta tags for PWA behavior.
+12. If the app involves timers, counters, or tracking, persist state across sessions via localStorage.`;
+
+    async function callAnthropic(messages) {
+      const resp = await fetch(ANTHROPIC_API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': getKey('anthropic_key'),
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 16000,
+          system: SYSTEM_PROMPT,
+          messages: messages,
+        }),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error?.message || `API error ${resp.status}`);
+      }
+      const data = await resp.json();
+      return data.content.map(b => b.text || '').join('');
+    }
+
+    function extractHTML(raw) {
+      // Strip markdown fences if model included them despite instructions
+      let html = raw.trim();
+      html = html.replace(/^```(?:html)?\s*/i, '').replace(/\s*```\s*$/, '');
+      // Ensure it starts with doctype or <html
+      const dtIdx = html.indexOf('<!DOCTYPE');
+      const htmlIdx = html.indexOf('<html');
+      const start = Math.min(
+        dtIdx >= 0 ? dtIdx : Infinity,
+        htmlIdx >= 0 ? htmlIdx : Infinity
+      );
+      if (start !== Infinity) html = html.substring(start);
+      return html;
+    }
+
+    async function startGeneration() {
+      const name = document.getElementById('app-name').value.trim();
+      const desc = document.getElementById('app-desc').value.trim();
+      const prompt = document.getElementById('app-prompt').value.trim();
+
+      if (!name || !prompt) {
+        alert('Please provide at least an app name and description of what it should do.');
+        return;
+      }
+
+      showStep(2);
+      document.getElementById('gen-log').innerHTML = '';
+      document.getElementById('preview-area').style.display = 'none';
+      document.getElementById('gen-sub').textContent = 'Claude is writing your app…';
+
+      const line = logLine('gen-log', 'Generating app with Claude Sonnet…');
+
+      const userMsg = `Build an app called "${name}".
+Short description: ${desc || name}
+Category: ${document.getElementById('app-category').value.trim() || 'Utility'}
+
+Here's what it should do:
+${prompt}`;
+
+      conversationHistory = [{ role: 'user', content: userMsg }];
+
+      try {
+        const raw = await callAnthropic(conversationHistory);
+        conversationHistory.push({ role: 'assistant', content: raw });
+        generatedHTML = extractHTML(raw);
+        updateLogLine(line, 'App generated', 'ok');
+        showPreview();
+      } catch (err) {
+        updateLogLine(line, 'Generation failed', 'fail');
+        document.getElementById('gen-log').insertAdjacentHTML('beforeend',
+          `<div class="error-box">${escapeHtml(err.message)}</div>`);
+      }
+    }
+
+    async function reviseApp() {
+      const notes = document.getElementById('revision-prompt').value.trim();
+      if (!notes) return;
+
+      document.getElementById('gen-log').innerHTML = '';
+      document.getElementById('preview-area').style.display = 'none';
+      document.getElementById('gen-sub').textContent = 'Revising…';
+
+      const line = logLine('gen-log', 'Revising with Claude…');
+
+      conversationHistory.push({ role: 'user', content: `Revise the app with these changes:\n${notes}\n\nOutput the complete updated HTML file. No explanation.` });
+
+      try {
+        const raw = await callAnthropic(conversationHistory);
+        conversationHistory.push({ role: 'assistant', content: raw });
+        generatedHTML = extractHTML(raw);
+        document.getElementById('revision-prompt').value = '';
+        updateLogLine(line, 'Revision complete', 'ok');
+        showPreview();
+      } catch (err) {
+        updateLogLine(line, 'Revision failed', 'fail');
+        document.getElementById('gen-log').insertAdjacentHTML('beforeend',
+          `<div class="error-box">${escapeHtml(err.message)}</div>`);
+      }
+    }
+
+    function showPreview() {
+      document.getElementById('gen-sub').textContent = 'Preview your app, then deploy or revise.';
+      document.getElementById('preview-area').style.display = 'block';
+      const iframe = document.getElementById('preview-iframe');
+      iframe.srcdoc = generatedHTML;
+
+      document.getElementById('code-preview').textContent = generatedHTML;
+      document.getElementById('code-preview').classList.remove('visible');
+      document.getElementById('code-toggle-btn').classList.remove('expanded');
+    }
+
+    function toggleCode() {
+      const btn = document.getElementById('code-toggle-btn');
+      const box = document.getElementById('code-preview');
+      btn.classList.toggle('expanded');
+      box.classList.toggle('visible');
+    }
+
+    /* ==========================================================
+       GITHUB API — DEPLOY
+       ========================================================== */
+    function ghHeaders() {
+      return {
+        'Authorization': `Bearer ${getKey('github_pat')}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      };
+    }
+
+    function repo() { return getKey('github_repo') || 'mhellermann/personal-app-store'; }
+
+    async function ghGetFile(path) {
+      const resp = await fetch(`${GITHUB_API}/repos/${repo()}/contents/${path}?ref=${BRANCH}`, {
+        headers: ghHeaders()
+      });
+      if (resp.status === 404) return null;
+      if (!resp.ok) throw new Error(`GitHub GET ${path}: ${resp.status}`);
+      return resp.json();
+    }
+
+    async function ghPutFile(path, content, message, sha = null) {
+      const body = {
+        message,
+        content: btoa(unescape(encodeURIComponent(content))),
+        branch: BRANCH,
+      };
+      if (sha) body.sha = sha;
+
+      const resp = await fetch(`${GITHUB_API}/repos/${repo()}/contents/${path}`, {
+        method: 'PUT',
+        headers: ghHeaders(),
+        body: JSON.stringify(body),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.message || `GitHub PUT ${path}: ${resp.status}`);
+      }
+      return resp.json();
+    }
+
+    function slugify(name) {
+      return name.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .substring(0, 40);
+    }
+
+    async function startDeploy() {
+      showStep(3);
+      document.getElementById('deploy-log').innerHTML = '';
+      document.getElementById('deploy-done').style.display = 'none';
+
+      const name = document.getElementById('app-name').value.trim();
+      const desc = document.getElementById('app-desc').value.trim() || name;
+      const category = document.getElementById('app-category').value.trim() || 'Utility';
+      const slug = slugify(name);
+      const filename = `${slug}.html`;
+      const filePath = `apps/${filename}`;
+      const monogram = name.charAt(0).toUpperCase();
+      const gradient = GRADIENTS[APPS.length % GRADIENTS.length];
+
+      /* Step 1: Commit app file */
+      let line1 = logLine('deploy-log', `Committing ${filePath}…`);
+      try {
+        const existing = await ghGetFile(filePath);
+        await ghPutFile(filePath, generatedHTML,
+          `Add ${name} app`, existing?.sha || null);
+        updateLogLine(line1, `Committed ${filePath}`, 'ok');
+      } catch (err) {
+        updateLogLine(line1, `Failed to commit app file`, 'fail');
+        document.getElementById('deploy-log').insertAdjacentHTML('beforeend',
+          `<div class="error-box">${escapeHtml(err.message)}</div>`);
+        return;
+      }
+
+      /* Step 2: Update index.html APPS array */
+      let line2 = logLine('deploy-log', 'Updating launcher index.html…');
+      try {
+        const indexFile = await ghGetFile('index.html');
+        if (!indexFile) throw new Error('Could not find index.html in repo');
+
+        const indexContent = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g, ''))));
+
+        const newEntry = `      {
+        name: ${JSON.stringify(name)},
+        desc: ${JSON.stringify(desc)},
+        url: "apps/${filename}",
+        monogram: ${JSON.stringify(monogram)},
+        category: ${JSON.stringify(category)},
+        gradient: ${JSON.stringify(gradient)}
+      },`;
+
+        // Insert new entry before the closing bracket of SEED_APPS array
+        // Find the "];" that closes the SEED_APPS array
+        const marker = '    ];';
+        const markerIdx = indexContent.indexOf(marker);
+        if (markerIdx === -1) throw new Error('Could not locate SEED_APPS closing bracket in index.html');
+
+        const updated = indexContent.substring(0, markerIdx) + newEntry + '\n' + indexContent.substring(markerIdx);
+
+        await ghPutFile('index.html', updated, `Add ${name} to launcher`, indexFile.sha);
+        updateLogLine(line2, 'Launcher updated', 'ok');
+      } catch (err) {
+        updateLogLine(line2, 'Failed to update launcher', 'fail');
+        document.getElementById('deploy-log').insertAdjacentHTML('beforeend',
+          `<div class="error-box">${escapeHtml(err.message)}</div>`);
+        return;
+      }
+
+      /* Step 3: Register locally */
+      let line3 = logLine('deploy-log', 'Updating local registry…');
+      const newApp = {
+        name, desc,
+        url: `apps/${filename}`,
+        monogram, category, gradient
+      };
+      const localApps = getLocalApps();
+      // Avoid duplicates
+      const existingIdx = localApps.findIndex(a => a.url === newApp.url);
+      if (existingIdx >= 0) localApps[existingIdx] = newApp;
+      else localApps.push(newApp);
+      saveLocalApps(localApps);
+      APPS = [...SEED_APPS, ...getLocalApps()];
+      renderGrid();
+      updateLogLine(line3, 'Local registry updated', 'ok');
+
+      /* Step 4: Notify Pages deployment */
+      logLine('deploy-log', 'GitHub Pages will deploy in ~30 seconds', 'ok');
+
+      document.getElementById('deploy-done').style.display = 'block';
+    }
+
+    function finishCreate() {
+      closeCreateModal();
+    }
+
+    /* ==========================================================
+       UTILITIES
+       ========================================================== */
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
   </script>
 </body>
 </html>
