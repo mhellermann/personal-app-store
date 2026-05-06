@@ -61,6 +61,7 @@
     width: 190px; height: 190px;
     margin: 10px auto 4px;
     flex-shrink: 0;
+    cursor: pointer;
   }
   .circle-outer {
     position: absolute; inset: 0;
@@ -91,6 +92,13 @@
     line-height: 1.3;
     white-space: pre;
   }
+  .circle-hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
 
   .time-display { text-align: center; margin: 4px 0 2px; flex-shrink: 0; }
   .time-remaining {
@@ -100,35 +108,13 @@
   }
   .time-elapsed { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
 
-  .controls { width: 100%; max-width: 380px; flex-shrink: 0; }
-  .main-btn {
-    display: block;
-    width: 100%; max-width: 260px;
-    margin: 8px auto;
-    padding: 12px 0;
-    border: none; border-radius: 40px;
-    font-family: var(--font-body);
-    font-size: 15px; font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    letter-spacing: 0.5px;
-  }
-  .main-btn.start { background: var(--accent); color: #fff; box-shadow: 0 4px 20px var(--accent-glow); }
-  .main-btn.pause { background: var(--surface2); color: var(--text); border: 1px solid rgba(176,143,90,0.3); }
-  .main-btn.resume { background: var(--success); color: #fff; }
-  .main-btn:active { transform: scale(0.97); }
-  .reset-hint {
-    text-align: center; font-size: 11px; color: var(--text-dim);
-    margin-top: 1px; opacity: 0; transition: opacity 0.3s;
-  }
-  .reset-hint.visible { opacity: 1; }
-
   .settings {
     width: 100%; max-width: 380px;
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 4px;
+    margin-top: 6px;
   }
   .setting-group {
     background: var(--surface);
@@ -242,7 +228,6 @@
   body.running .settings { display: none; }
   body.running .circle-wrap { margin-top: 30px; width: 240px; height: 240px; }
   body.running .time-remaining { font-size: 52px; }
-  body.paused .main-btn.start { display: none; }
 </style>
 </head>
 <body>
@@ -258,15 +243,11 @@
   <div class="circle-inner" id="circleInner"></div>
   <div class="breath-label" id="breathLabel"></div>
 </div>
+<div class="circle-hint" id="circleHint">Tap to begin</div>
 
 <div class="time-display">
   <div class="time-remaining" id="timeRemaining">20:00</div>
   <div class="time-elapsed" id="timeElapsed"></div>
-</div>
-
-<div class="controls">
-  <button class="main-btn start" id="btnStart">Begin</button>
-  <div class="reset-hint" id="resetHint">Long press to reset</div>
 </div>
 
 <div class="settings" id="settingsPanel">
@@ -328,7 +309,7 @@ const S = {
   breathMode: 'free',
   freeInhale: 4,
   freeExhale: 4,
-  bells: { 5: true, 10: true, 15: true },
+  bells: {},
   running: false,
   paused: false,
   startTime: null,
@@ -338,109 +319,94 @@ const S = {
 };
 
 /* ── Audio ─────────────────────────────────────── */
-let audioCtx = null;
-let silentAudio = null;
-let silentInterval = null;
+let audioCtx=null, silentAudio=null, silentIv=null;
 
-function initAudio() {
-  if (audioCtx) return;
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-  silentAudio = document.createElement('audio');
-  silentAudio.setAttribute('playsinline', '');
-  silentAudio.setAttribute('webkit-playsinline', '');
-  silentAudio.loop = true;
-
-  const buf = new ArrayBuffer(44 + 8000);
-  const v = new DataView(buf);
-  wStr(v,0,'RIFF'); v.setUint32(4,36+8000,true); wStr(v,8,'WAVE');
-  wStr(v,12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true);
-  v.setUint16(22,1,true); v.setUint32(24,8000,true); v.setUint32(28,8000,true);
-  v.setUint16(32,1,true); v.setUint16(34,8,true);
-  wStr(v,36,'data'); v.setUint32(40,8000,true);
-  const b = new Uint8Array(buf);
-  for (let i=44;i<44+8000;i++) b[i]=128;
-  b[44]=129;
-  silentAudio.src = URL.createObjectURL(new Blob([buf],{type:'audio/wav'}));
+function initAudio(){
+  if(audioCtx)return;
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  silentAudio=document.createElement('audio');
+  silentAudio.setAttribute('playsinline','');
+  silentAudio.setAttribute('webkit-playsinline','');
+  silentAudio.loop=true;
+  const buf=new ArrayBuffer(44+8000),v=new DataView(buf);
+  wS(v,0,'RIFF');v.setUint32(4,36+8000,true);wS(v,8,'WAVE');
+  wS(v,12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);
+  v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);
+  v.setUint16(32,1,true);v.setUint16(34,8,true);
+  wS(v,36,'data');v.setUint32(40,8000,true);
+  const b=new Uint8Array(buf);for(let i=44;i<44+8000;i++)b[i]=128;b[44]=129;
+  silentAudio.src=URL.createObjectURL(new Blob([buf],{type:'audio/wav'}));
 }
 
-function wStr(v,o,s){for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));}
+function wS(v,o,s){for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));}
 
-function startSilentLoop() {
-  if (!silentAudio) return;
+function startSilent(){
+  if(!silentAudio)return;
   silentAudio.play().catch(()=>{});
-  silentInterval = setInterval(()=>{
-    if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume().catch(()=>{});
-    if(silentAudio.paused) silentAudio.play().catch(()=>{});
+  silentIv=setInterval(()=>{
+    if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
+    if(silentAudio.paused)silentAudio.play().catch(()=>{});
   },3000);
 }
 
-function stopSilentLoop() {
+function stopSilent(){
   if(silentAudio)silentAudio.pause();
-  if(silentInterval)clearInterval(silentInterval);
-  silentInterval=null;
+  if(silentIv)clearInterval(silentIv);silentIv=null;
 }
 
-function playBell(type) {
+function playBell(type){
   if(!audioCtx)return;
   if(audioCtx.state==='suspended')audioCtx.resume();
-  const now=audioCtx.currentTime;
-  const count=type==='end'?3:1;
+  const now=audioCtx.currentTime,count=type==='end'?3:1;
   for(let i=0;i<count;i++){
     const t=now+i*1.2;
     [528,396].forEach((freq,fi)=>{
-      const osc=audioCtx.createOscillator();
-      const gain=audioCtx.createGain();
-      osc.type='sine';
-      osc.frequency.setValueAtTime(freq,t);
-      gain.gain.setValueAtTime(0,t);
-      gain.gain.linearRampToValueAtTime(0.15/(fi+1),t+0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001,t+2.5);
-      osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.start(t); osc.stop(t+2.5);
+      const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+      o.type='sine';o.frequency.setValueAtTime(freq,t);
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(0.15/(fi+1),t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001,t+2.5);
+      o.connect(g);g.connect(audioCtx.destination);
+      o.start(t);o.stop(t+2.5);
     });
   }
-  playBellFallback(type);
+  bellFallback(type);
 }
 
-function playBellFallback(type) {
-  const sr=22050, dur=type==='end'?4:2.5;
-  const n=Math.floor(sr*dur);
-  const buf=new ArrayBuffer(44+n*2);
-  const v=new DataView(buf);
-  wStr(v,0,'RIFF'); v.setUint32(4,36+n*2,true); wStr(v,8,'WAVE');
-  wStr(v,12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true);
-  v.setUint16(22,1,true); v.setUint32(24,sr,true); v.setUint32(28,sr*2,true);
-  v.setUint16(32,2,true); v.setUint16(34,16,true);
-  wStr(v,36,'data'); v.setUint32(40,n*2,true);
+function bellFallback(type){
+  const sr=22050,dur=type==='end'?4:2.5,n=Math.floor(sr*dur);
+  const buf=new ArrayBuffer(44+n*2),v=new DataView(buf);
+  wS(v,0,'RIFF');v.setUint32(4,36+n*2,true);wS(v,8,'WAVE');
+  wS(v,12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);
+  v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);
+  v.setUint16(32,2,true);v.setUint16(34,16,true);
+  wS(v,36,'data');v.setUint32(40,n*2,true);
   const bc=type==='end'?3:1;
   for(let i=0;i<n;i++){
-    const t=i/sr; let s=0;
+    const t=i/sr;let s=0;
     for(let b=0;b<bc;b++){
-      const bt=t-b*1.2; if(bt<0)continue;
+      const bt=t-b*1.2;if(bt<0)continue;
       const e=Math.exp(-bt*1.8)*0.3;
-      s+=Math.sin(2*Math.PI*528*bt)*e;
-      s+=Math.sin(2*Math.PI*396*bt)*e*0.5;
+      s+=Math.sin(2*Math.PI*528*bt)*e+Math.sin(2*Math.PI*396*bt)*e*0.5;
     }
-    s=Math.max(-1,Math.min(1,s));
-    v.setInt16(44+i*2,s*16000,true);
+    v.setInt16(44+i*2,Math.max(-1,Math.min(1,s))*16000,true);
   }
   const a=new Audio(URL.createObjectURL(new Blob([buf],{type:'audio/wav'})));
   a.play().catch(()=>{});
 }
 
 /* ── Breathing ─────────────────────────────────── */
-function getPhases() {
-  if(S.breathMode==='free') return [
+function getPhases(){
+  if(S.breathMode==='free')return[
     {name:'Inhale',duration:S.freeInhale,color:'var(--breathe-in)',scale:2.8},
     {name:'Exhale',duration:S.freeExhale,color:'var(--breathe-out)',scale:1},
   ];
-  if(S.breathMode==='478') return [
+  if(S.breathMode==='478')return[
     {name:'Inhale',duration:4,color:'var(--breathe-in)',scale:2.8},
     {name:'Hold',duration:7,color:'var(--breathe-hold)',scale:2.8},
     {name:'Exhale',duration:8,color:'var(--breathe-out)',scale:1},
   ];
-  return [
+  return[
     {name:'Inhale',duration:4,color:'var(--breathe-in)',scale:2.8},
     {name:'Hold',duration:4,color:'var(--breathe-hold)',scale:2.8},
     {name:'Exhale',duration:4,color:'var(--breathe-out)',scale:1},
@@ -448,83 +414,57 @@ function getPhases() {
   ];
 }
 
-let breathFrame=null, breathT0=0;
+let bFrame=null,bT0=0;
 
-function getBreathState(el) {
-  const ph=getPhases();
-  const cyc=ph.reduce((s,p)=>s+p.duration,0);
-  const pos=el%cyc;
-  let cum=0;
-  for(const p of ph){
-    if(pos<cum+p.duration){
-      const prog=(pos-cum)/p.duration;
-      return {phase:p,progress:prog};
-    }
-    cum+=p.duration;
-  }
-  return {phase:ph[0],progress:0};
+function bState(el){
+  const ph=getPhases(),cyc=ph.reduce((s,p)=>s+p.duration,0),pos=el%cyc;
+  let c=0;
+  for(const p of ph){if(pos<c+p.duration)return{phase:p,progress:(pos-c)/p.duration};c+=p.duration;}
+  return{phase:ph[0],progress:0};
 }
 
-function animBreath() {
+function animB(){
   if(!S.running||S.paused)return;
-  const el=performance.now()/1000-breathT0;
-  const {phase,progress}=getBreathState(el);
-  const ci=document.getElementById('circleInner');
-  const lb=document.getElementById('breathLabel');
-
+  const el=performance.now()/1000-bT0;
+  const{phase,progress}=bState(el);
+  const ci=document.getElementById('circleInner'),lb=document.getElementById('breathLabel');
   let sc;
-  if(phase.name==='Inhale') sc=1+(2.8-1)*ease(progress);
-  else if(phase.name==='Exhale') sc=2.8-(2.8-1)*ease(progress);
+  if(phase.name==='Inhale')sc=1+(2.8-1)*ease(progress);
+  else if(phase.name==='Exhale')sc=2.8-(2.8-1)*ease(progress);
   else sc=phase.scale;
-
   ci.style.transform=`translate(-50%,-50%) scale(${sc})`;
   ci.style.background=`radial-gradient(circle,${phase.color} 0%,rgba(176,143,90,0.05) 100%)`;
-  const rem=Math.ceil(phase.duration*(1-progress));
-  lb.textContent=`${phase.name}\n${rem}`;
-  breathFrame=requestAnimationFrame(animBreath);
+  lb.textContent=`${phase.name}\n${Math.ceil(phase.duration*(1-progress))}`;
+  bFrame=requestAnimationFrame(animB);
 }
 
-function ease(t){return -(Math.cos(Math.PI*t)-1)/2;}
-
-function startBreath(){
-  breathT0=performance.now()/1000;
-  document.getElementById('circleInner').classList.add('breathing');
-  animBreath();
-}
-
-function stopBreath(){
-  if(breathFrame)cancelAnimationFrame(breathFrame);
-  breathFrame=null;
+function ease(t){return-(Math.cos(Math.PI*t)-1)/2;}
+function startB(){bT0=performance.now()/1000;document.getElementById('circleInner').classList.add('breathing');animB();}
+function stopB(){
+  if(bFrame)cancelAnimationFrame(bFrame);bFrame=null;
   const ci=document.getElementById('circleInner');
-  ci.classList.remove('breathing');
-  ci.style.transform='translate(-50%,-50%) scale(1)';
-  ci.style.background='';
+  ci.classList.remove('breathing');ci.style.transform='translate(-50%,-50%) scale(1)';ci.style.background='';
   document.getElementById('breathLabel').textContent='';
 }
 
 /* ── Timer ─────────────────────────────────────── */
-let tickIv=null, bellsDone=new Set();
-
-function fmt(s){const m=Math.floor(s/60);return m+':'+String(s%60).padStart(2,'0');}
-
+let tickIv=null,bellsDone=new Set();
+function fmt(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
 function activeEl(){
   if(!S.startTime)return 0;
-  const now=Date.now();
-  const pt=S.paused?(now-S.pauseStart):0;
+  const now=Date.now(),pt=S.paused?(now-S.pauseStart):0;
   return Math.floor((now-S.startTime-S.pauseOffset-pt)/1000);
 }
 
 function tick(){
   if(!S.running||S.paused)return;
-  const el=activeEl(); S.elapsed=el;
-  const tot=S.duration*60;
-  const rem=Math.max(0,tot-el);
+  const el=activeEl();S.elapsed=el;
+  const rem=Math.max(0,S.duration*60-el);
   document.getElementById('timeRemaining').textContent=fmt(rem);
   document.getElementById('timeElapsed').textContent=fmt(el)+' elapsed';
-
-  for(const[min,on]of Object.entries(S.bells)){
-    const m=parseInt(min);
-    if(on&&el>=m*60&&!bellsDone.has(m)){
+  // Check bells
+  for(let m=5;m<S.duration;m+=5){
+    if(S.bells[m]&&el>=m*60&&!bellsDone.has(m)){
       if(el-m*60<2){bellsDone.add(m);playBell('interval');}
       else bellsDone.add(m);
     }
@@ -533,31 +473,31 @@ function tick(){
 }
 
 function startTimer(){
-  initAudio(); startSilentLoop();
+  initAudio();startSilent();
   S.running=true;S.paused=false;S.startTime=Date.now();
   S.pauseOffset=0;S.pauseStart=null;S.elapsed=0;
   bellsDone.clear();
   document.body.classList.add('running');
   document.body.classList.remove('paused');
+  updHint();
   playBell('interval');
   reqWake();
   tickIv=setInterval(tick,250);
-  tick(); startBreath(); updBtn();
+  tick();startB();
 }
 
 function pauseTimer(){
   S.paused=true;S.pauseStart=Date.now();
   document.body.classList.add('paused');
-  if(breathFrame)cancelAnimationFrame(breathFrame);
-  breathFrame=null; updBtn();
+  if(bFrame)cancelAnimationFrame(bFrame);bFrame=null;
+  updHint();
 }
 
 function resumeTimer(){
   S.pauseOffset+=Date.now()-S.pauseStart;
   S.paused=false;S.pauseStart=null;
   document.body.classList.remove('paused');
-  breathT0=performance.now()/1000;
-  animBreath(); updBtn();
+  bT0=performance.now()/1000;animB();updHint();
 }
 
 function resetTimer(){
@@ -565,12 +505,11 @@ function resetTimer(){
   S.pauseOffset=0;S.pauseStart=null;S.elapsed=0;
   bellsDone.clear();
   if(tickIv)clearInterval(tickIv);tickIv=null;
-  stopBreath();stopSilentLoop();relWake();
+  stopB();stopSilent();relWake();
   document.body.classList.remove('running','paused');
   document.getElementById('timeRemaining').textContent=fmt(S.duration*60);
   document.getElementById('timeElapsed').textContent='';
-  document.getElementById('resetHint').classList.remove('visible');
-  updBtn();
+  updHint();
 }
 
 function complete(){
@@ -581,12 +520,12 @@ function complete(){
   localStorage.setItem('med_sessions',JSON.stringify(sess));
   setTimeout(()=>{
     if(navigator.vibrate)navigator.vibrate([200,100,200,100,200]);
-    stopBreath();stopSilentLoop();relWake();
+    stopB();stopSilent();relWake();
     S.running=false;S.paused=false;
     document.body.classList.remove('running','paused');
     document.getElementById('timeRemaining').textContent='Done';
     document.getElementById('timeElapsed').textContent=fmt(S.elapsed)+' completed';
-    updWeekly();updBtn();
+    updWeekly();updHint();
     setTimeout(()=>{
       document.getElementById('timeRemaining').textContent=fmt(S.duration*60);
       document.getElementById('timeElapsed').textContent='';
@@ -594,31 +533,66 @@ function complete(){
   },500);
 }
 
-function updBtn(){
-  const b=document.getElementById('btnStart');
-  const h=document.getElementById('resetHint');
-  if(!S.running){b.textContent='Begin';b.className='main-btn start';h.classList.remove('visible');}
-  else if(S.paused){b.textContent='Resume';b.className='main-btn resume';h.classList.add('visible');}
-  else{b.textContent='Pause';b.className='main-btn pause';h.classList.add('visible');}
+function updHint(){
+  const h=document.getElementById('circleHint');
+  if(!S.running)h.textContent='Tap to begin';
+  else if(S.paused)h.textContent='Tap to resume \u00b7 hold to reset';
+  else h.textContent='Tap to pause \u00b7 hold to reset';
 }
 
 /* ── Wake Lock ─────────────────────────────────── */
 let wl=null;
-async function reqWake(){if('wakeLock'in navigator){try{wl=await navigator.wakeLock.request('screen');}catch(e){}}}
+async function reqWake(){if('wakeLock'in navigator)try{wl=await navigator.wakeLock.request('screen');}catch(e){}}
 function relWake(){if(wl){wl.release().catch(()=>{});wl=null;}}
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&S.running&&!S.paused){
-    reqWake();
-    if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
+    reqWake();if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
   }
 });
 
-/* ── UI ────────────────────────────────────────── */
+/* ── Circle interaction ────────────────────────── */
+const circle=document.getElementById('circleWrap');
+let lpt=null,lpFired=false;
+
+circle.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  lpFired=false;
+  if(S.running){
+    lpt=setTimeout(()=>{lpFired=true;resetTimer();if(navigator.vibrate)navigator.vibrate(50);},800);
+  }
+},{passive:false});
+
+circle.addEventListener('touchend',e=>{
+  e.preventDefault();
+  clearTimeout(lpt);
+  if(lpFired)return;
+  if(!S.running)startTimer();
+  else if(S.paused)resumeTimer();
+  else pauseTimer();
+});
+
+circle.addEventListener('touchcancel',()=>{clearTimeout(lpt);});
+
+// Mouse fallback
+circle.addEventListener('mousedown',()=>{
+  lpFired=false;
+  if(S.running)lpt=setTimeout(()=>{lpFired=true;resetTimer();},800);
+});
+circle.addEventListener('mouseup',()=>{
+  clearTimeout(lpt);
+  if(lpFired)return;
+  if(!S.running)startTimer();
+  else if(S.paused)resumeTimer();
+  else pauseTimer();
+});
+circle.addEventListener('mouseleave',()=>{clearTimeout(lpt);});
+
+/* ── UI setup ──────────────────────────────────── */
 function updDur(d){
   S.duration=Math.max(5,Math.min(60,S.duration+d));
   document.getElementById('durVal').textContent=S.duration+' min';
   document.getElementById('timeRemaining').textContent=fmt(S.duration*60);
-  savePref();renderBells();
+  rebuildBells();savePref();
 }
 document.getElementById('durUp').addEventListener('click',()=>updDur(5));
 document.getElementById('durDown').addEventListener('click',()=>updDur(-5));
@@ -627,12 +601,12 @@ document.getElementById('breathModes').addEventListener('click',e=>{
   const b=e.target.closest('[data-mode]');if(!b)return;
   S.breathMode=b.dataset.mode;
   document.querySelectorAll('.breath-mode-btn').forEach(x=>x.classList.toggle('active',x.dataset.mode===S.breathMode));
-  updBreathSteppers(); savePref();
+  updBreathUI();savePref();
 });
 
 document.getElementById('breathSteppers').addEventListener('click',e=>{
   const b=e.target.closest('[data-target]');if(!b)return;
-  const tgt=b.dataset.target, dir=parseInt(b.dataset.dir);
+  const tgt=b.dataset.target,dir=parseInt(b.dataset.dir);
   if(tgt==='inhale'){
     S.freeInhale=Math.max(2,Math.min(10,S.freeInhale+dir));
     document.getElementById('inhaleVal').textContent=S.freeInhale+'s';
@@ -643,35 +617,30 @@ document.getElementById('breathSteppers').addEventListener('click',e=>{
   savePref();
 });
 
-function updBreathSteppers(){
+function updBreathUI(){
   document.getElementById('breathSteppers').style.display=S.breathMode==='free'?'flex':'none';
 }
 
-const btnStart=document.getElementById('btnStart');
-btnStart.addEventListener('click',()=>{
-  if(!S.running)startTimer();
-  else if(S.paused)resumeTimer();
-  else pauseTimer();
-});
-
-let lpt=null;
-btnStart.addEventListener('touchstart',()=>{
-  if(!S.running)return;
-  lpt=setTimeout(()=>{resetTimer();if(navigator.vibrate)navigator.vibrate(50);},800);
-},{passive:true});
-btnStart.addEventListener('touchend',()=>clearTimeout(lpt));
-btnStart.addEventListener('touchcancel',()=>clearTimeout(lpt));
-btnStart.addEventListener('mousedown',()=>{if(!S.running)return;lpt=setTimeout(()=>resetTimer(),800);});
-btnStart.addEventListener('mouseup',()=>clearTimeout(lpt));
-btnStart.addEventListener('mouseleave',()=>clearTimeout(lpt));
+/* ── Bells ─────────────────────────────────────── */
+function rebuildBells(){
+  // Build a clean bells object for the current duration
+  const fresh={};
+  for(let m=5;m<S.duration;m+=5){
+    // Preserve existing preference if it exists, default to true
+    fresh[m]=(m in S.bells)?S.bells[m]:true;
+  }
+  S.bells=fresh;
+  renderBells();
+}
 
 function renderBells(){
   const c=document.getElementById('bellToggles');c.innerHTML='';
-  const marks=[];
-  for(let m=5;m<S.duration;m+=5)marks.push(m);
-  if(!marks.length){c.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:4px 0">Session too short for interval bells</div>';return;}
+  const marks=Object.keys(S.bells).map(Number).sort((a,b)=>a-b);
+  if(!marks.length){
+    c.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:4px 0">Session too short for interval bells</div>';
+    return;
+  }
   marks.forEach(m=>{
-    if(!(m in S.bells))S.bells[m]=true;
     const row=document.createElement('div');row.className='bell-row';
     row.innerHTML=`<span class="bell-label">${m} min</span><button class="toggle ${S.bells[m]?'on':''}" data-bell="${m}"></button>`;
     row.querySelector('.toggle').addEventListener('click',function(){
@@ -681,6 +650,7 @@ function renderBells(){
   });
 }
 
+/* ── Weekly ────────────────────────────────────── */
 function updWeekly(){
   const sess=JSON.parse(localStorage.getItem('med_sessions')||'[]');
   const now=new Date(),sow=new Date(now);
@@ -689,6 +659,7 @@ function updWeekly(){
   document.getElementById('weeklyVal').textContent=Math.round(wm/60)+' min';
 }
 
+/* ── Prefs ─────────────────────────────────────── */
 function savePref(){
   localStorage.setItem('med_pref',JSON.stringify({
     duration:S.duration,breathMode:S.breathMode,
@@ -701,8 +672,10 @@ function loadPref(){
   try{
     const p=JSON.parse(localStorage.getItem('med_pref'));
     if(p){
-      S.duration=p.duration||20;S.breathMode=p.breathMode||'free';
-      S.freeInhale=p.freeInhale||4;S.freeExhale=p.freeExhale||4;
+      S.duration=p.duration||20;
+      S.breathMode=p.breathMode||'free';
+      S.freeInhale=p.freeInhale||4;
+      S.freeExhale=p.freeExhale||4;
       if(p.bells)S.bells=p.bells;
     }
   }catch(e){}
@@ -715,7 +688,7 @@ document.getElementById('timeRemaining').textContent=fmt(S.duration*60);
 document.getElementById('inhaleVal').textContent=S.freeInhale+'s';
 document.getElementById('exhaleVal').textContent=S.freeExhale+'s';
 document.querySelectorAll('.breath-mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===S.breathMode));
-updBreathSteppers();renderBells();updWeekly();
+updBreathUI();rebuildBells();updWeekly();updHint();
 </script>
 </body>
 </html>
