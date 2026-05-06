@@ -1000,11 +1000,9 @@
       grid.innerHTML = '';
 
       APPS.forEach((app, i) => {
-        const a = document.createElement('a');
+        const a = document.createElement('div');
         a.className = 'tile';
-        a.href = app.url;
         a.style.setProperty('--tile-gradient', app.gradient);
-        a.target = '_self';
         a.style.animationDelay = `${0.5 + i * 0.08}s`;
         a.innerHTML = `
           <span class="category">${app.category}</span>
@@ -1053,21 +1051,30 @@
         el.classList.remove('pressing');
       }
 
-      function endPress(e) {
+      // Touch
+      el.addEventListener('touchstart', startPress, { passive: true });
+      el.addEventListener('touchmove', cancelPress);
+      el.addEventListener('touchend', (e) => {
         clearTimeout(timer);
         el.classList.remove('pressing');
         if (didLongPress) {
           e.preventDefault();
+          didLongPress = false;
         }
-      }
-
-      // Touch
-      el.addEventListener('touchstart', startPress, { passive: true });
-      el.addEventListener('touchmove', cancelPress);
-      el.addEventListener('touchend', endPress);
+      });
       el.addEventListener('touchcancel', cancelPress);
 
-      // Desktop: right-click
+      // Block navigation click after long-press
+      el.addEventListener('click', (e) => {
+        if (didLongPress) {
+          e.stopPropagation();
+          didLongPress = false;
+          return;
+        }
+        window.location.href = app.url;
+      });
+
+      // Desktop: right-click to edit
       el.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         openEditModal(app);
