@@ -222,6 +222,20 @@
 
     .tile:active { transform: translateY(0) scale(0.98); }
 
+    /* Prevent Safari native link preview on long-press */
+    .tile {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* Suppress iOS Safari native link preview on long-press */
+    .tile {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
     .tile .monogram {
       font-family: var(--serif);
       font-style: italic;
