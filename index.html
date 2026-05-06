@@ -685,6 +685,35 @@
       opacity: 0.5;
     }
 
+    /* LONG-PRESS INDICATOR */
+    .tile.pressing {
+      transform: scale(0.95) !important;
+      border-color: var(--accent) !important;
+      transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s ease !important;
+    }
+    .tile .edit-hint {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 5;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      border-radius: 21px;
+    }
+    .tile .edit-hint span {
+      font-family: var(--sans);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .tile.pressing .edit-hint { opacity: 1; }
+
     /* Stagger entrance */
     .tile, .greeting, .subtitle, .section-label, .meta-row {
       opacity: 0;
@@ -733,7 +762,7 @@
 
     <footer>
       <span>Built locally · No App Store</span>
-      <em>v2.0</em>
+      <em>v2.1</em>
     </footer>
   </div>
 
@@ -970,7 +999,9 @@
             <span class="name">${app.name}</span>
             <span class="desc">${app.desc}</span>
           </span>
+          <span class="edit-hint"><span>Edit App</span></span>
         `;
+        setupLongPress(a, app, i);
         grid.appendChild(a);
       });
 
@@ -982,6 +1013,51 @@
       grid.appendChild(addTile);
 
       countEl.textContent = APPS.length === 1 ? '1 app' : `${APPS.length} apps`;
+    }
+
+    /* ==========================================================
+       LONG-PRESS TO EDIT
+       ========================================================== */
+    const LONG_PRESS_MS = 600;
+
+    function setupLongPress(el, app, index) {
+      let timer = null;
+      let didLongPress = false;
+
+      function startPress(e) {
+        didLongPress = false;
+        el.classList.add('pressing');
+        timer = setTimeout(() => {
+          didLongPress = true;
+          el.classList.remove('pressing');
+          openEditModal(app);
+        }, LONG_PRESS_MS);
+      }
+
+      function cancelPress() {
+        clearTimeout(timer);
+        el.classList.remove('pressing');
+      }
+
+      function endPress(e) {
+        clearTimeout(timer);
+        el.classList.remove('pressing');
+        if (didLongPress) {
+          e.preventDefault();
+        }
+      }
+
+      // Touch
+      el.addEventListener('touchstart', startPress, { passive: true });
+      el.addEventListener('touchmove', cancelPress);
+      el.addEventListener('touchend', endPress);
+      el.addEventListener('touchcancel', cancelPress);
+
+      // Desktop: right-click
+      el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        openEditModal(app);
+      });
     }
 
     renderGrid();
@@ -1065,10 +1141,11 @@
     });
 
     /* ==========================================================
-       CREATE FLOW — STATE
+       CREATE / EDIT FLOW — STATE
        ========================================================== */
     let generatedHTML = '';
     let conversationHistory = [];
+    let editingApp = null; // null = creating new, object = editing existing
 
     function openCreateModal() {
       if (!getKey('anthropic_key') || !getKey('github_pat')) {
@@ -1076,7 +1153,54 @@
         openModal('settings-modal');
         return;
       }
+      editingApp = null;
       resetCreateModal();
+      openModal('create-modal');
+    }
+
+    async function openEditModal(app) {
+      if (!getKey('anthropic_key') || !getKey('github_pat')) {
+        loadSettings();
+        openModal('settings-modal');
+        return;
+      }
+      editingApp = app;
+      resetCreateModal();
+
+      // Pre-fill step 1 fields from existing app
+      document.getElementById('app-name').value = app.name;
+      document.getElementById('app-desc').value = app.desc;
+      document.getElementById('app-category').value = app.category;
+
+      // Skip to step 2 and fetch existing source
+      showStep(2);
+      document.getElementById('gen-log').innerHTML = '';
+      document.getElementById('preview-area').style.display = 'none';
+      document.getElementById('gen-sub').textContent = 'Fetching current source…';
+
+      const line = logLine('gen-log', `Fetching ${app.url}…`);
+
+      try {
+        const file = await ghGetFile(app.url);
+        if (!file) throw new Error(`File not found: ${app.url}`);
+        const source = decodeURIComponent(escape(atob(file.content.replace(/\n/g, ''))));
+        generatedHTML = source;
+
+        // Seed conversation so Claude has the full existing source for revisions
+        conversationHistory = [
+          { role: 'user', content: `Here is the current source code of my app "${app.name}":\n\n${source}` },
+          { role: 'assistant', content: source }
+        ];
+
+        updateLogLine(line, 'Source loaded', 'ok');
+        showPreview();
+        document.getElementById('gen-sub').textContent = `Editing ${app.name}. Describe your changes, then deploy.`;
+      } catch (err) {
+        updateLogLine(line, 'Failed to fetch source', 'fail');
+        document.getElementById('gen-log').insertAdjacentHTML('beforeend',
+          `<div class="error-box">${escapeHtml(err.message)}</div>`);
+      }
+
       openModal('create-modal');
     }
 
@@ -1092,6 +1216,7 @@
       document.getElementById('revision-prompt').value = '';
       generatedHTML = '';
       conversationHistory = [];
+      editingApp = null;
       showStep(1);
     }
 
@@ -1370,18 +1495,18 @@ ${prompt}`;
       const name = document.getElementById('app-name').value.trim();
       const desc = document.getElementById('app-desc').value.trim() || name;
       const category = document.getElementById('app-category').value.trim() || 'Utility';
-      const slug = slugify(name);
-      const filename = `${slug}.html`;
-      const filePath = `apps/${filename}`;
+      const isEdit = !!editingApp;
+      const filePath = isEdit ? editingApp.url : `apps/${slugify(name)}.html`;
+      const filename = filePath.replace('apps/', '');
       const monogram = name.charAt(0).toUpperCase();
-      const gradient = GRADIENTS[APPS.length % GRADIENTS.length];
+      const gradient = isEdit ? editingApp.gradient : GRADIENTS[APPS.length % GRADIENTS.length];
 
       /* Step 1: Commit app file */
       let line1 = logLine('deploy-log', `Committing ${filePath}…`);
       try {
         const existing = await ghGetFile(filePath);
         await ghPutFile(filePath, generatedHTML,
-          `Add ${name} app`, existing?.sha || null);
+          `${isEdit ? 'Update' : 'Add'} ${name} app`, existing?.sha || null);
         updateLogLine(line1, `Committed ${filePath}`, 'ok');
       } catch (err) {
         updateLogLine(line1, `Failed to commit app file`, 'fail');
@@ -1390,15 +1515,16 @@ ${prompt}`;
         return;
       }
 
-      /* Step 2: Update index.html APPS array */
-      let line2 = logLine('deploy-log', 'Updating launcher index.html…');
-      try {
-        const indexFile = await ghGetFile('index.html');
-        if (!indexFile) throw new Error('Could not find index.html in repo');
+      /* Step 2: Update index.html APPS array (new apps only) */
+      if (!isEdit) {
+        let line2 = logLine('deploy-log', 'Updating launcher index.html…');
+        try {
+          const indexFile = await ghGetFile('index.html');
+          if (!indexFile) throw new Error('Could not find index.html in repo');
 
-        const indexContent = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g, ''))));
+          const indexContent = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g, ''))));
 
-        const newEntry = `      {
+          const newEntry = `      {
         name: ${JSON.stringify(name)},
         desc: ${JSON.stringify(desc)},
         url: "apps/${filename}",
@@ -1407,39 +1533,41 @@ ${prompt}`;
         gradient: ${JSON.stringify(gradient)}
       },`;
 
-        // Insert new entry before the closing bracket of SEED_APPS array
-        // Find the "];" that closes the SEED_APPS array
-        const marker = '    ];';
-        const markerIdx = indexContent.indexOf(marker);
-        if (markerIdx === -1) throw new Error('Could not locate SEED_APPS closing bracket in index.html');
+          const marker = '    ];';
+          const markerIdx = indexContent.indexOf(marker);
+          if (markerIdx === -1) throw new Error('Could not locate SEED_APPS closing bracket in index.html');
 
-        const updated = indexContent.substring(0, markerIdx) + newEntry + '\n' + indexContent.substring(markerIdx);
+          const updated = indexContent.substring(0, markerIdx) + newEntry + '\n' + indexContent.substring(markerIdx);
 
-        await ghPutFile('index.html', updated, `Add ${name} to launcher`, indexFile.sha);
-        updateLogLine(line2, 'Launcher updated', 'ok');
-      } catch (err) {
-        updateLogLine(line2, 'Failed to update launcher', 'fail');
-        document.getElementById('deploy-log').insertAdjacentHTML('beforeend',
-          `<div class="error-box">${escapeHtml(err.message)}</div>`);
-        return;
+          await ghPutFile('index.html', updated, `Add ${name} to launcher`, indexFile.sha);
+          updateLogLine(line2, 'Launcher updated', 'ok');
+        } catch (err) {
+          updateLogLine(line2, 'Failed to update launcher', 'fail');
+          document.getElementById('deploy-log').insertAdjacentHTML('beforeend',
+            `<div class="error-box">${escapeHtml(err.message)}</div>`);
+          return;
+        }
+      } else {
+        logLine('deploy-log', 'Launcher unchanged (existing app)', 'ok');
       }
 
-      /* Step 3: Register locally */
-      let line3 = logLine('deploy-log', 'Updating local registry…');
-      const newApp = {
-        name, desc,
-        url: `apps/${filename}`,
-        monogram, category, gradient
-      };
-      const localApps = getLocalApps();
-      // Avoid duplicates
-      const existingIdx = localApps.findIndex(a => a.url === newApp.url);
-      if (existingIdx >= 0) localApps[existingIdx] = newApp;
-      else localApps.push(newApp);
-      saveLocalApps(localApps);
-      APPS = [...SEED_APPS, ...getLocalApps()];
-      renderGrid();
-      updateLogLine(line3, 'Local registry updated', 'ok');
+      /* Step 3: Register locally (new apps only) */
+      if (!isEdit) {
+        let line3 = logLine('deploy-log', 'Updating local registry…');
+        const newApp = {
+          name, desc,
+          url: `apps/${filename}`,
+          monogram, category, gradient
+        };
+        const localApps = getLocalApps();
+        const existingIdx = localApps.findIndex(a => a.url === newApp.url);
+        if (existingIdx >= 0) localApps[existingIdx] = newApp;
+        else localApps.push(newApp);
+        saveLocalApps(localApps);
+        APPS = [...SEED_APPS, ...getLocalApps()];
+        renderGrid();
+        updateLogLine(line3, 'Local registry updated', 'ok');
+      }
 
       /* Step 4: Notify Pages deployment */
       logLine('deploy-log', 'GitHub Pages will deploy in ~30 seconds', 'ok');
