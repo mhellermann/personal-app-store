@@ -172,6 +172,24 @@ details summary::-webkit-details-marker { display: none; }
   color: var(--text-dim); margin-bottom: 10px;
 }
 
+/* ── Mic Button ── */
+.mic-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.mic-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text-muted); font-size: 20px;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.mic-btn:active { transform: scale(0.93); }
+.mic-btn.recording {
+  background: var(--danger); border-color: var(--danger);
+  color: #fff; animation: mic-pulse 1.2s ease-in-out infinite;
+}
+@keyframes mic-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(232,107,90,0.4); } 50% { box-shadow: 0 0 0 10px rgba(232,107,90,0); } }
+.mic-hint { font-size: 11px; color: var(--text-dim); }
+
 /* ── Animations ── */
 @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 .fade-up { animation: fadeUp 0.35s ease-out both; }
@@ -205,30 +223,31 @@ details summary::-webkit-details-marker { display: none; }
 // ── Config ────────────────────────────────────────────────────
 const STORAGE_PREFIX = 'idea_machine_';
 const CATEGORIES = [
-  { id: 'domain',        label: 'Domain Collision', icon: '⚡', color: '#E8A838' },
-  { id: 'health',        label: 'Health',           icon: '🧬', color: '#4CAF82' },
-  { id: 'wealth',        label: 'Wealth',           icon: '📈', color: '#5B8DEF' },
-  { id: 'relationships', label: 'Relationships',    icon: '🤝', color: '#E86B5A' },
-  { id: 'business',      label: 'Business',         icon: '🏗️', color: '#9B6EE7' },
+  { id: 'domain',   label: 'Domain Collision', icon: '⚡', color: '#E8A838' },
+  { id: 'health',   label: 'Health',           icon: '🧬', color: '#4CAF82' },
+  { id: 'wealth',   label: 'Wealth',           icon: '📈', color: '#5B8DEF' },
+  { id: 'relationships', label: 'Relationships', icon: '🤝', color: '#E86B5A' },
+  { id: 'business', label: 'My Business Edge',  icon: '🏗️', color: '#9B6EE7' },
+  { id: 'aigeneral', label: 'AI & General',     icon: '🤖', color: '#58A6FF' },
 ];
 
-const DOMAIN_CONTEXT = `You are generating ideation prompts for Michael, a semi-retired professional with a unique background:
-- Systematic trend-following trader (built and ran quantitative trading systems)
-- 20+ years in energy trading (natural gas, crude oil, power) at firms including Enron, Aquila, ATEL, EDF Trading, HETCO, eni T&S
-- Dual German engineering degrees (Dipl.-Ing. & Dipl.-Wirt.-Ing., Mechanical Engineering, RWTH Aachen)
-- Lives in Newport Beach, CA; dual US/German perspective
-- AI power user (Claude, automation, PWAs)
-- Practices Body by Science HIT training, Zen meditation, evidence-based health optimization
-- Analytical, left-brained; engineering mindset favoring simplicity, robustness, and skepticism
+const PROMPT_RULES = `RULES FOR THE PROMPT YOU GENERATE:
+- Maximum 2 sentences. Brevity is critical.
+- The prompt must naturally invite a LIST of 10 distinct ideas — not a single deep analysis.
+- Start with "List 10..." or "What are 10..." or similar list-inviting framing.
+- Be concrete and specific, not abstract or philosophical.
+- Each of the 10 ideas should be answerable in 1-3 sentences.
+- Return ONLY the prompt text. No preamble, quotes, or numbering.`;
 
-His domain intersections are where the best ideas live: systematic trading × energy markets × German engineering rigor × AI fluency × health optimization × entrepreneurship.`;
+const DOMAIN_CONTEXT = `Michael's background: systematic trend-following trader, 20+ years energy trading (Enron, EDF, HETCO, eni), dual German engineering degrees (RWTH Aachen), AI power user, HIT fitness, Newport Beach CA.`;
 
 const CATEGORY_SYSTEM = {
-  domain: `${DOMAIN_CONTEXT}\n\nGenerate ONE sharp, specific ideation prompt that forces collision between two or more of Michael's domains. The prompt should be concrete enough to generate actionable business or product ideas — not vague philosophical questions. Reference specific knowledge or skills from his background. The prompt should make him think "I'm uniquely positioned to answer this."\n\nReturn ONLY the prompt text, no preamble, no quotes, no numbering.`,
-  health: `${DOMAIN_CONTEXT}\n\nGenerate ONE specific ideation prompt about health, fitness, longevity, or wellness optimization — angled through Michael's analytical/engineering lens. Think: quantified self, training protocols, recovery science, meditation practice, sleep optimization, nutrition as a system. Leverage his HIT training experience, Oura ring data literacy, and systematic thinking. Be specific and actionable.\n\nReturn ONLY the prompt text, no preamble, no quotes, no numbering.`,
-  wealth: `${DOMAIN_CONTEXT}\n\nGenerate ONE specific ideation prompt about wealth building, asset management, passive income, or financial optimization. Leverage Michael's deep knowledge of systematic trading, energy markets, risk management, and quantitative analysis. Think: alternative income streams, market inefficiencies, productized expertise, financial tools. Not generic "invest in index funds" territory.\n\nReturn ONLY the prompt text, no preamble, no quotes, no numbering.`,
-  relationships: `${DOMAIN_CONTEXT}\n\nGenerate ONE specific ideation prompt about relationships, networking, community building, mentorship, or social capital. Consider Michael's dual US/German network, his energy industry connections, his AI community involvement, and his son at UC Irvine. Think: high-leverage relationship strategies, community creation, knowledge sharing, cross-cultural bridge-building.\n\nReturn ONLY the prompt text, no preamble, no quotes, no numbering.`,
-  business: `${DOMAIN_CONTEXT}\n\nGenerate ONE specific, concrete business ideation prompt. This should push toward identifying a real opportunity — a product, service, platform, or consultancy — that exploits Michael's unique combination of skills. Think Thiel-style: what do you know that others don't? What's a secret hidden in plain sight in energy trading, systematic risk management, or AI-augmented decision making? Be provocative and specific.\n\nReturn ONLY the prompt text, no preamble, no quotes, no numbering.`,
+  domain: `${DOMAIN_CONTEXT}\n\nGenerate ONE ideation prompt that collides two or more of Michael's domains (trading, energy, German engineering, AI, health). The prompt should leverage knowledge unique to his background.\n\n${PROMPT_RULES}`,
+  health: `Generate ONE ideation prompt about health, fitness, longevity, sleep, nutrition, or wellness — from a quantified/analytical angle. Think wearable data, training protocols, recovery optimization, habit systems.\n\n${PROMPT_RULES}`,
+  wealth: `${DOMAIN_CONTEXT}\n\nGenerate ONE ideation prompt about wealth building, income streams, financial tools, or money optimization. Go beyond basic investing — think productized expertise, market inefficiencies, overlooked financial strategies.\n\n${PROMPT_RULES}`,
+  relationships: `Generate ONE ideation prompt about relationships, networking, community, mentorship, or social capital. Think high-leverage connections, knowledge sharing, community creation, or ways to deepen existing relationships.\n\n${PROMPT_RULES}`,
+  business: `${DOMAIN_CONTEXT}\n\nGenerate ONE ideation prompt about business opportunities that exploit Michael's specific combination of skills — trading systems, energy markets, risk management, AI tools, German engineering rigor. What could he build or offer that others can't?\n\n${PROMPT_RULES}`,
+  aigeneral: `Generate ONE ideation prompt about AI-powered or AI-enabled business opportunities. These should be general — NOT tied to any specific professional background. Think: problems AI can now solve that couldn't be solved before, underserved markets, new product categories, workflow automation, AI wrappers, niche tools. Be specific about the problem domain.\n\n${PROMPT_RULES}`,
 };
 
 // ── State ─────────────────────────────────────────────────────
@@ -409,6 +428,98 @@ function saveEditedPrompt(id) {
 }
 
 // ── Helpers ───────────────────────────────────────────────────
+let recognition = null;
+let isRecording = false;
+let activeDictationIdx = 0;
+
+function toggleDictation() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    alert('Speech recognition is not supported in this browser. Try Chrome or Safari.');
+    return;
+  }
+  if (isRecording) { stopDictation(); return; }
+
+  // Find first empty slot
+  activeDictationIdx = state.ideas.findIndex(x => !x.trim());
+  if (activeDictationIdx === -1) activeDictationIdx = 9;
+
+  recognition = new SR();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  recognition.onresult = (e) => {
+    let final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        final += e.results[i][0].transcript;
+      }
+    }
+    if (final) {
+      // Check for "next" keyword
+      const trimmed = final.trim().toLowerCase();
+      if (trimmed === 'next' || trimmed === 'next.') {
+        activeDictationIdx = state.ideas.findIndex((x, i) => i > activeDictationIdx && !x.trim());
+        if (activeDictationIdx === -1) activeDictationIdx = state.ideas.findIndex(x => !x.trim());
+        if (activeDictationIdx === -1) activeDictationIdx = 9;
+        const hint = document.getElementById('mic-hint');
+        if (hint) hint.textContent = `Listening… idea ${activeDictationIdx + 1}`;
+        return;
+      }
+
+      let idx = activeDictationIdx;
+      state.ideas[idx] = (state.ideas[idx] + ' ' + final).trim();
+
+      // Update the textarea directly without full re-render
+      const ta = document.querySelector(`[data-idea="${idx}"]`);
+      if (ta) {
+        ta.value = state.ideas[idx];
+        ta.style.height = 'auto';
+        ta.style.height = ta.scrollHeight + 'px';
+        const num = ta.closest('.idea-row').querySelector('.idea-num');
+        if (num) num.className = 'idea-num filled';
+      }
+      // Update progress
+      const filled = filledCount();
+      const bar = document.querySelector('.progress-fill');
+      const label = document.querySelector('.progress-label');
+      if (bar) { bar.style.width = (filled/10)*100+'%'; bar.style.background = filled===10?'var(--success)':'var(--accent)'; }
+      if (label) { label.textContent = filled+'/10'; label.style.color = filled===10?'var(--success)':'var(--text-muted)'; }
+
+      // Auto-advance to next empty slot
+      const nextEmpty = state.ideas.findIndex((x, i) => i > idx && !x.trim());
+      if (nextEmpty !== -1) activeDictationIdx = nextEmpty;
+
+      const hint = document.getElementById('mic-hint');
+      if (hint) hint.textContent = `Listening… idea ${activeDictationIdx + 1}`;
+    }
+  };
+
+  recognition.onerror = () => stopDictation();
+  recognition.onend = () => {
+    if (isRecording) {
+      try { recognition.start(); } catch(e) { stopDictation(); }
+    }
+  };
+
+  recognition.start();
+  isRecording = true;
+  const btn = document.getElementById('mic-btn');
+  if (btn) btn.classList.add('recording');
+  const hint = document.getElementById('mic-hint');
+  if (hint) hint.textContent = `Listening… idea ${activeDictationIdx + 1}`;
+}
+
+function stopDictation() {
+  isRecording = false;
+  if (recognition) { recognition.stop(); recognition = null; }
+  const btn = document.getElementById('mic-btn');
+  if (btn) btn.classList.remove('recording');
+  const hint = document.getElementById('mic-hint');
+  if (hint) hint.textContent = 'Tap to dictate · say "next" to advance';
+}
+
 function getCat(id) { return CATEGORIES.find(c => c.id === id) || { icon: '📝', label: 'Custom', color: '#8B9DAF' }; }
 function filledCount() { return state.ideas.filter(i => i.trim()).length; }
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
@@ -558,6 +669,11 @@ function renderSession() {
       <span class="progress-label" style="color:${filled===10?'var(--success)':'var(--text-muted)'}">${filled}/10</span>
     </div>
 
+    <div class="mic-bar fade-up">
+      <button class="mic-btn" id="mic-btn" title="Dictate ideas">🎤</button>
+      <span class="mic-hint" id="mic-hint">Tap to dictate · say "next" to advance</span>
+    </div>
+
     <div>
       ${state.ideas.map((idea, i) => `
         <div class="idea-row">
@@ -669,6 +785,7 @@ function bindEvents() {
   // Navigation
   document.querySelectorAll('[data-nav]').forEach(el => {
     el.addEventListener('click', () => {
+      if (isRecording) stopDictation();
       state.view = el.dataset.nav;
       render();
     });
@@ -757,6 +874,12 @@ function bindEvents() {
 
   // New prompt input
   const newInput = document.getElementById('new-prompt-input');
+
+  // Mic button
+  const micBtn = document.getElementById('mic-btn');
+  if (micBtn) {
+    micBtn.addEventListener('click', toggleDictation);
+  }
   if (newInput) {
     newInput.addEventListener('input', () => {
       state.newPromptText = newInput.value;
