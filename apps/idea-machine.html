@@ -5,1192 +5,778 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#2D2A26">
-<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0D1117">
 <title>Idea Machine</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --bg: #F5F0E8;
-  --bg-card: #FFFDF8;
-  --text: #2D2A26;
-  --text-muted: #8A847A;
-  --accent: #C8923C;
-  --accent-light: #E8D5B8;
-  --accent-glow: rgba(200, 146, 60, 0.15);
-  --border: #E5DFD5;
-  --red: #C0564B;
-  --green: #5A8A6A;
-  --serif: 'Playfair Display', Georgia, serif;
-  --sans: 'DM Sans', -apple-system, sans-serif;
-  --radius: 14px;
-  --nav-height: 72px;
+  --bg: #0D1117;
+  --surface: #161B22;
+  --surface-hover: #1C2333;
+  --border: #30363D;
+  --border-focus: #58A6FF;
+  --text: #E6EDF3;
+  --text-muted: #7D8590;
+  --text-dim: #484F58;
+  --accent: #E8A838;
+  --accent-dim: rgba(232,168,56,0.15);
+  --danger: #E86B5A;
+  --success: #4CAF82;
+  --mono: 'DM Mono', 'SF Mono', monospace;
+  --serif: 'Instrument Serif', Georgia, serif;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 html, body {
-  height: 100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 16px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  overflow: hidden;
+  height: 100%; background: var(--bg); color: var(--text);
+  font-family: var(--mono); font-size: 14px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased; overflow: hidden;
 }
 
-/* ── Layout ── */
 #app {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  height: 100%; display: flex; flex-direction: column;
+  max-width: 640px; margin: 0 auto;
   padding-top: var(--safe-top);
 }
 
-.view {
-  display: none;
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 20px 20px calc(var(--nav-height) + var(--safe-bottom) + 16px);
-  -webkit-overflow-scrolling: touch;
-}
+/* ── Views ── */
+.view { display: none; flex: 1; overflow-y: auto; padding: 20px 16px calc(20px + var(--safe-bottom)); -webkit-overflow-scrolling: touch; }
 .view.active { display: block; }
 
-/* ── Bottom Nav ── */
-nav {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  height: calc(var(--nav-height) + var(--safe-bottom));
-  padding-bottom: var(--safe-bottom);
-  background: var(--bg-card);
-  border-top: 1px solid var(--border);
-  display: flex;
-  z-index: 100;
-}
-nav button {
-  flex: 1;
-  background: none; border: none;
-  font-family: var(--sans);
-  font-size: 11px; font-weight: 500;
-  color: var(--text-muted);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 4px; cursor: pointer;
-  transition: color 0.2s;
-}
-nav button.active { color: var(--accent); }
-nav button svg { width: 24px; height: 24px; }
-
 /* ── Typography ── */
-h1 { font-family: var(--serif); font-size: 28px; font-weight: 700; line-height: 1.2; }
-h2 { font-family: var(--serif); font-size: 22px; font-weight: 700; line-height: 1.3; }
-h3 { font-family: var(--sans); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+h1, h2 { font-family: var(--serif); font-weight: 400; letter-spacing: -0.02em; }
+h1 { font-size: 32px; }
+h2 { font-size: 24px; }
 
 /* ── Cards ── */
 .card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  padding: 20px;
-  border: 1px solid var(--border);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px;
 }
 
 /* ── Buttons ── */
 .btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  font-family: var(--sans); font-size: 15px; font-weight: 600;
-  border: none; border-radius: 10px; padding: 14px 24px;
-  cursor: pointer; transition: all 0.2s;
-  width: 100%;
+  font-family: var(--mono); font-size: 13px; border: none;
+  cursor: pointer; border-radius: 6px; transition: all 0.2s;
+  display: inline-flex; align-items: center; gap: 6px;
 }
-.btn-primary {
-  background: var(--text); color: var(--bg);
+.btn-primary { background: var(--accent); color: var(--bg); padding: 10px 20px; font-weight: 500; }
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled { opacity: 0.4; cursor: default; }
+.btn-success { background: var(--success); color: var(--bg); padding: 10px 20px; font-weight: 500; }
+.btn-ghost {
+  background: transparent; color: var(--text-muted); padding: 8px 14px;
+  border: 1px solid var(--border);
 }
-.btn-primary:active { transform: scale(0.97); opacity: 0.9; }
-.btn-secondary {
-  background: transparent; color: var(--text);
-  border: 1.5px solid var(--border);
-}
-.btn-accent {
-  background: var(--accent); color: #fff;
-}
-.btn-accent:active { transform: scale(0.97); }
-.btn-sm { padding: 10px 16px; font-size: 14px; width: auto; }
+.btn-ghost:active { background: var(--surface); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+.btn-danger { color: var(--danger); }
+.btn-back { background: none; border: none; color: var(--text-muted); font-family: var(--mono); font-size: 12px; cursor: pointer; padding: 4px 0; margin-bottom: 12px; }
 
-/* ── TODAY VIEW ── */
-.streak-bar {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 0; margin-bottom: 8px;
+/* ── Inputs ── */
+textarea, input[type="text"] {
+  width: 100%; font-family: var(--mono); font-size: 13px; line-height: 1.6;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; resize: vertical; transition: border-color 0.2s;
 }
-.streak-num {
-  font-family: var(--serif); font-size: 40px; font-weight: 700;
-  color: var(--accent); line-height: 1;
-}
-.streak-label { font-size: 13px; color: var(--text-muted); line-height: 1.3; }
+textarea:focus, input[type="text"]:focus { outline: none; border-color: var(--border-focus); }
+textarea::placeholder, input::placeholder { color: var(--text-dim); }
 
-.category-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 12px; margin: 20px 0;
-}
+/* ── Category Grid ── */
+.cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .cat-btn {
-  background: var(--bg-card); border: 1.5px solid var(--border);
-  border-radius: var(--radius); padding: 20px 16px;
-  font-family: var(--sans); font-size: 14px; font-weight: 500;
-  color: var(--text); cursor: pointer;
-  text-align: left; transition: all 0.2s;
-  display: flex; flex-direction: column; gap: 8px;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; cursor: pointer;
+  font-family: var(--mono); font-size: 12px; color: var(--text);
+  transition: all 0.2s; text-align: left;
 }
-.cat-btn:active, .cat-btn.selected {
-  border-color: var(--accent); background: var(--accent-glow);
-}
-.cat-btn .cat-icon { font-size: 24px; }
-.cat-btn .cat-name { font-weight: 600; }
+.cat-btn:active { transform: scale(0.97); }
+.cat-btn .icon { font-size: 20px; flex-shrink: 0; }
 
-.prompt-display {
-  font-family: var(--serif); font-size: 22px; font-style: italic;
-  line-height: 1.4; color: var(--text); margin: 24px 0;
-  padding: 24px; background: var(--accent-glow);
-  border-radius: var(--radius);
-  border-left: 3px solid var(--accent);
-}
+/* ── Stats ── */
+.stats { display: flex; gap: 10px; margin-bottom: 24px; }
+.stat-card { flex: 1; text-align: center; padding: 12px 8px; }
+.stat-val { font-size: 22px; font-family: var(--serif); font-weight: 400; }
+.stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-/* ── Idea Input ── */
-.idea-list { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
-.idea-row {
-  display: flex; align-items: flex-start; gap: 10px;
-}
+/* ── Prompt Display ── */
+.prompt-display { border-left: 3px solid var(--accent); }
+.prompt-text { font-size: 14px; line-height: 1.7; margin-bottom: 14px; }
+.prompt-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── Idea List ── */
+.idea-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 6px; }
 .idea-num {
-  font-family: var(--serif); font-size: 18px; font-weight: 700;
-  color: var(--accent-light); min-width: 28px; padding-top: 10px;
-  text-align: right;
+  font-size: 12px; color: var(--text-dim); min-width: 22px;
+  padding-top: 10px; text-align: right; font-variant-numeric: tabular-nums;
+  transition: color 0.2s;
 }
-.idea-input {
-  flex: 1; background: var(--bg-card);
-  border: 1.5px solid var(--border); border-radius: 10px;
-  padding: 10px 14px; font-family: var(--sans); font-size: 15px;
-  color: var(--text); resize: none; min-height: 42px;
-  line-height: 1.4; transition: border-color 0.2s;
-}
-.idea-input:focus {
-  outline: none; border-color: var(--accent);
-}
-.idea-input.filled { border-color: var(--green); background: rgba(90,138,106,0.04); }
+.idea-num.filled { color: var(--accent); }
+.idea-row textarea { flex: 1; resize: none; overflow: hidden; padding: 8px 12px; }
 
-.progress-bar {
-  height: 4px; background: var(--border); border-radius: 2px;
-  overflow: hidden; margin: 16px 0 8px;
-}
-.progress-fill {
-  height: 100%; background: var(--accent);
-  border-radius: 2px; transition: width 0.4s ease;
-}
-.progress-text {
-  font-size: 13px; color: var(--text-muted); text-align: right;
-}
+/* ── Progress ── */
+.progress-bar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease, background 0.3s ease; }
+.progress-label { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
-.dictate-bar {
-  display: flex; gap: 10px; margin: 12px 0;
-  align-items: center;
-}
-.btn-mic {
-  width: 48px; height: 48px; border-radius: 50%;
-  background: var(--bg-card); border: 1.5px solid var(--border);
+/* ── Prompt List ── */
+.prompt-item { position: relative; }
+.prompt-item-text { font-size: 13px; line-height: 1.6; padding-right: 80px; }
+.prompt-item-date { font-size: 11px; color: var(--text-dim); margin-top: 6px; }
+.prompt-item-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 4px; }
+
+/* ── History ── */
+details summary { list-style: none; cursor: pointer; }
+details summary::-webkit-details-marker { display: none; }
+.history-summary { display: flex; align-items: center; gap: 8px; }
+.history-icon { font-size: 16px; flex-shrink: 0; }
+.history-meta { font-size: 12px; color: var(--text-muted); }
+.history-prompt-preview { font-size: 13px; margin-top: 2px; line-height: 1.4; }
+.history-expand { color: var(--text-dim); font-size: 14px; margin-left: auto; flex-shrink: 0; }
+.history-body { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.history-body ol { padding-left: 20px; }
+.history-body li { font-size: 13px; line-height: 1.6; margin-bottom: 4px; }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7); z-index: 100;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+  padding: 16px;
 }
-.btn-mic.recording {
-  background: var(--red); border-color: var(--red);
+.modal-content {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 12px; max-width: 560px; width: 100%;
+  max-height: 80vh; overflow-y: auto; padding: 20px;
 }
-.btn-mic.recording svg { stroke: #fff; }
-.btn-mic svg { width: 22px; height: 22px; stroke: var(--text); }
-.dictate-hint { font-size: 13px; color: var(--text-muted); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-header h3 { font-family: var(--serif); font-size: 22px; font-weight: 400; }
 
-/* ── Completed State ── */
-.completed-header {
-  text-align: center; padding: 32px 0 16px;
-}
-.completed-check {
-  width: 56px; height: 56px; border-radius: 50%;
-  background: var(--green); color: #fff;
-  display: inline-flex; align-items: center; justify-content: center;
-  margin-bottom: 16px; font-size: 28px;
+/* ── Spinner ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
 }
 
-/* ── ARCHIVE VIEW ── */
-.search-box {
-  position: relative; margin-bottom: 16px;
-}
-.search-box input {
-  width: 100%; padding: 12px 16px 12px 42px;
-  background: var(--bg-card); border: 1.5px solid var(--border);
-  border-radius: 10px; font-family: var(--sans); font-size: 15px;
-  color: var(--text);
-}
-.search-box input:focus { outline: none; border-color: var(--accent); }
-.search-box svg {
-  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-  width: 18px; height: 18px; stroke: var(--text-muted);
-}
-
-.filter-row {
-  display: flex; gap: 8px; margin-bottom: 16px;
-  overflow-x: auto; -webkit-overflow-scrolling: touch;
-  padding-bottom: 4px;
-}
-.filter-pill {
-  padding: 7px 14px; border-radius: 20px;
-  background: var(--bg-card); border: 1.5px solid var(--border);
-  font-family: var(--sans); font-size: 13px; font-weight: 500;
-  color: var(--text-muted); white-space: nowrap; cursor: pointer;
-  transition: all 0.2s;
-}
-.filter-pill.active {
-  background: var(--text); color: var(--bg); border-color: var(--text);
-}
-
-.session-card {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 16px;
-  margin-bottom: 10px; cursor: pointer;
-  transition: all 0.2s;
-}
-.session-card:active { transform: scale(0.99); }
-.session-meta {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 8px;
-}
-.session-date { font-size: 13px; color: var(--text-muted); }
-.session-cat {
-  font-size: 11px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.06em; color: var(--accent);
-}
-.session-prompt {
-  font-family: var(--serif); font-size: 16px; font-style: italic;
-  line-height: 1.4; margin-bottom: 6px;
-}
-.session-count { font-size: 13px; color: var(--text-muted); }
-
-/* Expanded session */
-.session-ideas { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
-.session-idea {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 8px 0;
-}
-.session-idea-num {
-  font-family: var(--serif); font-weight: 700;
-  color: var(--accent-light); min-width: 24px; font-size: 15px;
-}
-.session-idea-text { font-size: 15px; flex: 1; line-height: 1.4; }
-.star-btn {
-  background: none; border: none; cursor: pointer;
-  font-size: 18px; padding: 0; opacity: 0.3;
-  transition: all 0.2s;
-}
-.star-btn.starred { opacity: 1; }
-
-.empty-state {
-  text-align: center; padding: 60px 20px;
-  color: var(--text-muted);
-}
-.empty-state h2 { color: var(--text-muted); margin-bottom: 8px; }
-
-/* Random review */
-.random-banner {
-  background: var(--accent-glow); border: 1px solid var(--accent-light);
-  border-radius: var(--radius); padding: 16px; margin-bottom: 16px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.random-banner span { font-size: 14px; font-weight: 500; }
-
-/* ── SETTINGS VIEW ── */
-.setting-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 16px 0; border-bottom: 1px solid var(--border);
-}
-.setting-label { font-weight: 500; }
-.setting-desc { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
-.time-input {
-  padding: 8px 12px; border: 1.5px solid var(--border);
-  border-radius: 8px; font-family: var(--sans); font-size: 15px;
-  background: var(--bg-card); color: var(--text);
-}
-
-.toggle {
-  width: 48px; height: 28px; border-radius: 14px;
-  background: var(--border); border: none; cursor: pointer;
-  position: relative; transition: background 0.2s;
-}
-.toggle.on { background: var(--accent); }
-.toggle::after {
-  content: ''; position: absolute;
-  width: 22px; height: 22px; border-radius: 50%;
-  background: #fff; top: 3px; left: 3px;
-  transition: transform 0.2s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-.toggle.on::after { transform: translateX(20px); }
-
-.stats-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-  margin: 16px 0;
-}
-.stat-card {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 16px; text-align: center;
-}
-.stat-num {
-  font-family: var(--serif); font-size: 32px; font-weight: 700;
-  color: var(--accent);
-}
-.stat-label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-
-.danger-zone { margin-top: 32px; }
-.btn-danger {
-  background: transparent; color: var(--red); border: 1.5px solid var(--red);
-  border-radius: 10px; padding: 12px; width: 100%;
-  font-family: var(--sans); font-size: 14px; font-weight: 600;
-  cursor: pointer;
+/* ── Label ── */
+.section-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-dim); margin-bottom: 10px;
 }
 
 /* ── Animations ── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.fade-up { animation: fadeUp 0.35s ease-out both; }
+
+/* ── API Key Warning ── */
+.key-warning {
+  background: rgba(232,107,90,0.1); border: 1px solid var(--danger);
+  border-radius: 8px; padding: 12px; font-size: 12px; color: var(--danger);
+  margin-bottom: 20px; line-height: 1.5;
 }
-.fade-up { animation: fadeUp 0.35s ease forwards; }
-.delay-1 { animation-delay: 0.06s; opacity: 0; }
-.delay-2 { animation-delay: 0.12s; opacity: 0; }
-.delay-3 { animation-delay: 0.18s; opacity: 0; }
-.delay-4 { animation-delay: 0.24s; opacity: 0; }
+.key-warning a { color: var(--danger); text-decoration: underline; }
 
 /* ── Scrollbar ── */
-.view::-webkit-scrollbar { width: 0; }
-
-/* ── Confirmation Modal ── */
-.modal-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.4); z-index: 200;
-  align-items: center; justify-content: center; padding: 24px;
-}
-.modal-overlay.show { display: flex; }
-.modal {
-  background: var(--bg-card); border-radius: var(--radius);
-  padding: 24px; max-width: 320px; width: 100%;
-  text-align: center;
-}
-.modal h2 { margin-bottom: 8px; }
-.modal p { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
-.modal-actions { display: flex; gap: 10px; }
-.modal-actions .btn { flex: 1; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 </style>
 </head>
 <body>
+
 <div id="app">
-
-  <!-- ═══ TODAY VIEW ═══ -->
-  <div id="view-today" class="view active">
-    <!-- Filled dynamically -->
-  </div>
-
-  <!-- ═══ ARCHIVE VIEW ═══ -->
-  <div id="view-archive" class="view">
-    <h1 style="margin-bottom:16px">Archive</h1>
-    <div class="search-box">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input type="text" id="search-input" placeholder="Search ideas…">
-    </div>
-    <div class="filter-row" id="filter-row">
-      <button class="filter-pill active" data-filter="all">All</button>
-      <button class="filter-pill" data-filter="starred">★ Starred</button>
-      <button class="filter-pill" data-filter="health">Health</button>
-      <button class="filter-pill" data-filter="wealth">Wealth</button>
-      <button class="filter-pill" data-filter="relationships">Relationships</button>
-      <button class="filter-pill" data-filter="business">Business</button>
-      <button class="filter-pill" data-filter="custom">Custom</button>
-    </div>
-    <div id="random-container"></div>
-    <div id="archive-list"></div>
-  </div>
-
-  <!-- ═══ SETTINGS VIEW ═══ -->
-  <div id="view-settings" class="view">
-    <h1 style="margin-bottom:20px">Settings</h1>
-
-    <h3>Stats</h3>
-    <div class="stats-grid" id="stats-grid"></div>
-
-    <h3 style="margin-top:24px">Data</h3>
-    <div class="setting-row">
-      <div>
-        <div class="setting-label">Export All Data</div>
-        <div class="setting-desc">Download as JSON</div>
-      </div>
-      <button class="btn btn-sm btn-secondary" onclick="exportData()">Export</button>
-    </div>
-
-    <div class="danger-zone">
-      <button class="btn-danger" onclick="showDeleteModal()">Delete All Data</button>
-    </div>
-
-    <p style="text-align:center; margin-top:32px; font-size:12px; color:var(--text-muted)">
-      Idea Machine — inspired by James Altucher<br>
-      Built for the daily practice
-    </p>
-  </div>
-
-  <!-- ═══ NAV ═══ -->
-  <nav>
-    <button class="active" data-view="today" onclick="switchView('today')">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-      Today
-    </button>
-    <button data-view="archive" onclick="switchView('archive')">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 4h16v4H4z"/><path d="M4 8v10a1 1 0 001 1h14a1 1 0 001-1V8"/><path d="M10 12h4"/></svg>
-      Archive
-    </button>
-    <button data-view="settings" onclick="switchView('settings')">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-      Settings
-    </button>
-  </nav>
-
-  <!-- Delete Modal -->
-  <div class="modal-overlay" id="delete-modal">
-    <div class="modal">
-      <h2>Delete everything?</h2>
-      <p>This will erase all your idea lists and settings. This cannot be undone.</p>
-      <div class="modal-actions">
-        <button class="btn btn-secondary btn-sm" onclick="hideDeleteModal()">Cancel</button>
-        <button class="btn btn-sm" style="background:var(--red);color:#fff" onclick="deleteAllData()">Delete</button>
-      </div>
-    </div>
-  </div>
+  <!-- Views are rendered by JS -->
 </div>
 
 <script>
-// ════════════════════════════════════════
-// PROMPT BANK
-// ════════════════════════════════════════
-const PROMPTS = {
-  health: [
-    "10 ways to improve your sleep quality this week",
-    "10 recovery practices you've never tried",
-    "10 meals you could prep on Sunday that fuel the whole week",
-    "10 ways to reduce inflammation through daily habits",
-    "10 exercises you could do in a hotel room with zero equipment",
-    "10 ways to make your training sessions more time-efficient",
-    "10 things you could measure to better understand your health",
-    "10 ways to improve your grip strength",
-    "10 breathing techniques or patterns worth experimenting with",
-    "10 ways to structure a perfect active recovery day",
-    "10 foods you could eliminate or add to feel noticeably better",
-    "10 ways to make stretching or mobility work actually enjoyable",
-    "10 health metrics that most people ignore but matter",
-    "10 ways to improve your posture throughout the day",
-    "10 things a 90-year-old version of you would thank you for starting now",
-    "10 ways to reduce eye strain and screen fatigue",
-    "10 ways to improve your cardiovascular health without running",
-    "10 single-set exercises that could transform a body part",
-    "10 ways to eat more protein without supplements",
-    "10 habits that would make your next bloodwork results better",
-    "10 ways to improve your energy between 2-4pm",
-    "10 joint-friendly exercises for long-term training longevity",
-    "10 ways meditation could be made more practical for busy people",
-    "10 cold or heat exposure protocols worth trying",
-    "10 things most people get wrong about strength training",
-    "10 ways to improve the quality of your first hour after waking",
-    "10 supplements that actually have strong evidence behind them",
-    "10 physical skills worth developing after age 50",
-    "10 ways to build a home gym for under $500",
-    "10 training principles that work regardless of age"
-  ],
-  wealth: [
-    "10 ways to reduce portfolio risk without sacrificing returns",
-    "10 markets or asset classes you've never seriously researched",
-    "10 improvements to your trading process or workflow",
-    "10 cognitive biases that cost traders the most money",
-    "10 ways to stress-test a trading strategy",
-    "10 income streams you could create from existing knowledge",
-    "10 financial risks most retirees underestimate",
-    "10 ways to improve your execution and reduce slippage",
-    "10 lessons from trading disasters that apply to everyday risk",
-    "10 books every investor should read but most haven't",
-    "10 ways to use technology to improve investment decisions",
-    "10 indicators or signals worth backtesting",
-    "10 ways to protect wealth during a currency crisis",
-    "10 things you'd tell a 25-year-old about building wealth",
-    "10 tax optimization strategies worth investigating",
-    "10 questions to ask before making any investment",
-    "10 ways systematic trading beats discretionary trading",
-    "10 scenarios that would break your current strategy",
-    "10 unconventional assets worth understanding",
-    "10 ways to think about position sizing differently",
-    "10 things the best traders do that average traders don't",
-    "10 ways to reduce emotional interference in trading decisions",
-    "10 data sources that could give you an analytical edge",
-    "10 ways real estate investing could complement trading income",
-    "10 financial metrics most people don't track but should",
-    "10 ways to simplify your financial life",
-    "10 ways AI could genuinely help a systematic trader",
-    "10 lessons from energy trading that apply to all markets",
-    "10 ways to evaluate whether a fund manager is skilled or lucky",
-    "10 things that change about investing after 50"
-  ],
-  relationships: [
-    "10 people you could reconnect with this month",
-    "10 questions that lead to deeper conversations",
-    "10 ways to be a better listener",
-    "10 people you admire and what you'd ask each of them",
-    "10 ways to strengthen your closest relationships",
-    "10 things you've learned from the most difficult people in your life",
-    "10 ways to make new friends as an adult",
-    "10 small gestures that mean more than expensive gifts",
-    "10 boundaries that would improve your relationships",
-    "10 ways to support someone going through a hard time",
-    "10 questions to ask your parents or elders before it's too late",
-    "10 ways to be more present in conversations",
-    "10 relationship lessons you wish you'd learned earlier",
-    "10 ways to build trust with someone new",
-    "10 people who shaped who you are and how you could thank them",
-    "10 ways to resolve a conflict without either side losing",
-    "10 ways to be a better mentor",
-    "10 things you could teach someone from your career experience",
-    "10 ways to make a stranger's day better",
-    "10 dinner party questions that spark real conversation",
-    "10 ways to maintain friendships across long distances",
-    "10 things worth apologizing for",
-    "10 ways to show appreciation to people you see every day",
-    "10 conversations you've been avoiding and why",
-    "10 ways to help your kids without controlling them",
-    "10 qualities of the best relationships you've had",
-    "10 ways to meet interesting people in your city",
-    "10 things you could do to build a local community",
-    "10 ways to handle someone who disagrees with you",
-    "10 lessons about people you learned from the trading floor"
-  ],
-  business: [
-    "10 problems you encounter daily that could be products",
-    "10 businesses you could start with just your existing knowledge",
-    "10 ways to validate a business idea in one weekend",
-    "10 services busy professionals would pay a premium for",
-    "10 ways AI could be applied to industries that haven't adopted it",
-    "10 newsletter or content ideas that could build an audience",
-    "10 boring businesses that generate reliable cash flow",
-    "10 things you could teach in an online course",
-    "10 industries ripe for disruption by a small operator",
-    "10 ways to monetize deep domain expertise",
-    "10 SaaS tools you wish existed",
-    "10 licensing or royalty-based business models",
-    "10 ways to test demand before building anything",
-    "10 partnerships that could make a weak idea strong",
-    "10 underserved customer segments you understand well",
-    "10 ways to create recurring revenue from a one-time service",
-    "10 local business ideas for Newport Beach or coastal OC",
-    "10 ways to leverage semi-retirement into a lifestyle business",
-    "10 things the fitness industry gets completely wrong",
-    "10 business ideas that combine trading knowledge with something else",
-    "10 ways to build a personal brand without social media",
-    "10 products you'd build if you had unlimited engineering talent",
-    "10 micro-businesses that could run on 5 hours per week",
-    "10 ways to find and interview potential customers",
-    "10 reasons most side projects fail and how to avoid each one",
-    "10 ideas for apps that solve real problems for people over 50",
-    "10 ways to create content that attracts high-value people",
-    "10 business models that work well for solo operators",
-    "10 things you know about energy markets that most people don't",
-    "10 ways to turn a hobby into supplemental income"
-  ]
+/* ==============================================================
+   IDEA MACHINE — Personal App Store Edition
+   Uses Anthropic API key from localStorage (pas_anthropic_key)
+   ============================================================== */
+
+// ── Config ────────────────────────────────────────────────────
+const STORAGE_PREFIX = 'idea_machine_';
+const CATEGORIES = [
+  { id: 'domain',        label: 'Domain Collision', icon: '⚡', color: '#E8A838' },
+  { id: 'health',        label: 'Health',           icon: '🧬', color: '#4CAF82' },
+  { id: 'wealth',        label: 'Wealth',           icon: '📈', color: '#5B8DEF' },
+  { id: 'relationships', label: 'Relationships',    icon: '🤝', color: '#E86B5A' },
+  { id: 'business',      label: 'Business',         icon: '🏗️', color: '#9B6EE7' },
+];
+
+const DOMAIN_CONTEXT = `You are generating ideation prompts for Michael, a semi-retired professional with a unique background:
+- Systematic trend-following trader (built and ran quantitative trading systems)
+- 20+ years in energy trading (natural gas, crude oil, power) at firms including Enron, Aquila, ATEL, EDF Trading, HETCO, eni T&S
+- Dual German engineering degrees (Dipl.-Ing. & Dipl.-Wirt.-Ing., Mechanical Engineering, RWTH Aachen)
+- Lives in Newport Beach, CA; dual US/German perspective
+- AI power user (Claude, automation, PWAs)
+- Practices Body by Science HIT training, Zen meditation, evidence-based health optimization
+- Analytical, left-brained; engineering mindset favoring simplicity, robustness, and skepticism
+
+His domain intersections are where the best ideas live: systematic trading × energy markets × German engineering rigor × AI fluency × health optimization × entrepreneurship.`;
+
+const CATEGORY_SYSTEM = {
+  domain: `${DOMAIN_CONTEXT}\n\nGenerate ONE sharp, specific ideation prompt that forces collision between two or more of Michael's domains. The prompt should be concrete enough to generate actionable business or product ideas — not vague philosophical questions. Reference specific knowledge or skills from his background. The prompt should make him think "I'm uniquely positioned to answer this."\n\nReturn ONLY the prompt text, no preamble, no quotes, no numbering.`,
+  health: `${DOMAIN_CONTEXT}\n\nGenerate ONE specific ideation prompt about health, fitness, longevity, or wellness optimization — angled through Michael's analytical/engineering lens. Think: quantified self, training protocols, recovery science, meditation practice, sleep optimization, nutrition as a system. Leverage his HIT training experience, Oura ring data literacy, and systematic thinking. Be specific and actionable.\n\nReturn ONLY the prompt text, no preamble, no quotes, no numbering.`,
+  wealth: `${DOMAIN_CONTEXT}\n\nGenerate ONE specific ideation prompt about wealth building, asset management, passive income, or financial optimization. Leverage Michael's deep knowledge of systematic trading, energy markets, risk management, and quantitative analysis. Think: alternative income streams, market inefficiencies, productized expertise, financial tools. Not generic "invest in index funds" territory.\n\nReturn ONLY the prompt text, no preamble, no quotes, no numbering.`,
+  relationships: `${DOMAIN_CONTEXT}\n\nGenerate ONE specific ideation prompt about relationships, networking, community building, mentorship, or social capital. Consider Michael's dual US/German network, his energy industry connections, his AI community involvement, and his son at UC Irvine. Think: high-leverage relationship strategies, community creation, knowledge sharing, cross-cultural bridge-building.\n\nReturn ONLY the prompt text, no preamble, no quotes, no numbering.`,
+  business: `${DOMAIN_CONTEXT}\n\nGenerate ONE specific, concrete business ideation prompt. This should push toward identifying a real opportunity — a product, service, platform, or consultancy — that exploits Michael's unique combination of skills. Think Thiel-style: what do you know that others don't? What's a secret hidden in plain sight in energy trading, systematic risk management, or AI-augmented decision making? Be provocative and specific.\n\nReturn ONLY the prompt text, no preamble, no quotes, no numbering.`,
 };
 
-const CAT_META = {
-  health: { icon: '💪', name: 'Health & Fitness', color: '#5A8A6A' },
-  wealth: { icon: '📈', name: 'Wealth & Trading', color: '#C8923C' },
-  relationships: { icon: '🤝', name: 'Relationships & People', color: '#7B6FA0' },
-  business: { icon: '💡', name: 'Business & Opportunities', color: '#C0564B' },
-  custom: { icon: '✏️', name: 'Custom', color: '#6B8CAE' }
-};
-
-// ════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════
+// ── State ─────────────────────────────────────────────────────
 let state = {
-  sessions: [],        // { id, date, category, prompt, ideas: [{text, starred}] }
-  usedPrompts: {},     // { category: [indices] }
-  settings: {
-    notifications: false,
-    reminderTime: '08:00'
-  }
+  view: 'home',
+  sessions: [],
+  streak: 0,
+  totalSessions: 0,
+  customPrompts: [],
+  currentSession: null,
+  ideas: Array(10).fill(''),
+  activePrompt: '',
+  activeCategory: null,
+  isGenerating: false,
+  genError: null,
+  showPromptPicker: false,
+  editingPromptId: null,
+  editingPromptText: '',
+  newPromptText: '',
 };
 
+// ── Persistence (localStorage) ────────────────────────────────
 function loadState() {
   try {
-    const saved = localStorage.getItem('idea-machine-state');
-    if (saved) state = JSON.parse(saved);
-  } catch(e) { console.warn('Failed to load state', e); }
-}
-
-function saveState() {
+    const d = JSON.parse(localStorage.getItem(STORAGE_PREFIX + 'data') || '{}');
+    state.sessions = d.sessions || [];
+    state.streak = d.streak || 0;
+    state.totalSessions = d.totalSessions || 0;
+  } catch {}
   try {
-    localStorage.setItem('idea-machine-state', JSON.stringify(state));
-  } catch(e) { console.warn('Failed to save state', e); }
+    state.customPrompts = JSON.parse(localStorage.getItem(STORAGE_PREFIX + 'prompts') || '[]');
+  } catch {}
 }
 
-function todayStr() {
-  return new Date().toISOString().split('T')[0];
+function saveData() {
+  localStorage.setItem(STORAGE_PREFIX + 'data', JSON.stringify({
+    sessions: state.sessions,
+    streak: state.streak,
+    totalSessions: state.totalSessions,
+  }));
 }
 
-function getStreak() {
-  let streak = 0;
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  for (let i = 0; i < 365; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const ds = d.toISOString().split('T')[0];
-    if (state.sessions.find(s => s.date === ds)) {
-      streak++;
-    } else if (i === 0) {
-      // today not done yet, that's ok
-      continue;
-    } else {
-      break;
+function savePrompts() {
+  localStorage.setItem(STORAGE_PREFIX + 'prompts', JSON.stringify(state.customPrompts));
+}
+
+// ── API Key ───────────────────────────────────────────────────
+function getApiKey() {
+  return localStorage.getItem('pas_anthropic_key') || '';
+}
+
+// ── API Call ───────────────────────────────────────────────────
+async function generatePrompt(categoryId) {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    state.genError = 'No API key found. Configure it in your App Store settings.';
+    state.isGenerating = false;
+    render();
+    return;
+  }
+  state.isGenerating = true;
+  state.genError = null;
+  render();
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        messages: [{ role: 'user', content: CATEGORY_SYSTEM[categoryId] }],
+      }),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || `API returned ${resp.status}`);
     }
+
+    const data = await resp.json();
+    const text = data.content?.find(b => b.type === 'text')?.text?.trim();
+    if (text) {
+      state.activePrompt = text;
+      state.activeCategory = categoryId;
+    } else {
+      state.genError = 'No prompt returned. Try again.';
+    }
+  } catch (err) {
+    state.genError = err.message || 'API error — check connection.';
   }
-  return streak;
+
+  state.isGenerating = false;
+  render();
 }
 
-function pickPrompt(category) {
-  if (!state.usedPrompts[category]) state.usedPrompts[category] = [];
-  const used = state.usedPrompts[category];
-  const available = PROMPTS[category]
-    .map((p, i) => ({ p, i }))
-    .filter(x => !used.includes(x.i));
-  if (available.length === 0) {
-    state.usedPrompts[category] = [];
-    return pickPrompt(category);
-  }
-  const pick = available[Math.floor(Math.random() * available.length)];
-  state.usedPrompts[category].push(pick.i);
-  saveState();
-  return pick.p;
+// ── Session Logic ─────────────────────────────────────────────
+function startSession(prompt, category) {
+  state.currentSession = {
+    id: Date.now().toString(),
+    date: new Date().toISOString(),
+    prompt,
+    category,
+  };
+  state.ideas = Array(10).fill('');
+  state.activePrompt = prompt;
+  state.view = 'session';
+  render();
+  // Focus first textarea
+  setTimeout(() => {
+    const first = document.querySelector('.idea-row textarea');
+    if (first) first.focus();
+  }, 100);
 }
 
-// ════════════════════════════════════════
-// VIEW SWITCHING
-// ════════════════════════════════════════
-function switchView(name) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById(`view-${name}`).classList.add('active');
-  document.querySelectorAll('nav button').forEach(b => {
-    b.classList.toggle('active', b.dataset.view === name);
+function saveSession() {
+  const filled = state.ideas.filter(i => i.trim()).length;
+  if (filled === 0) return;
+
+  const session = { ...state.currentSession, ideas: [...state.ideas], filledCount: filled };
+  state.sessions.unshift(session);
+
+  // Streak logic
+  const today = new Date().toDateString();
+  const lastDate = state.sessions[1]?.date ? new Date(state.sessions[1].date).toDateString() : null;
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+  if (lastDate === today) {
+    // already logged today
+  } else if (lastDate === yesterday) {
+    state.streak++;
+  } else {
+    state.streak = 1;
+  }
+  state.totalSessions++;
+
+  saveData();
+  state.currentSession = null;
+  state.view = 'home';
+  render();
+}
+
+// ── Custom Prompts ────────────────────────────────────────────
+function addCustomPrompt() {
+  const text = state.newPromptText.trim();
+  if (!text) return;
+  state.customPrompts.unshift({
+    id: Date.now().toString(),
+    text,
+    createdAt: new Date().toISOString(),
   });
-  if (name === 'today') renderToday();
-  if (name === 'archive') renderArchive();
-  if (name === 'settings') renderSettings();
+  state.newPromptText = '';
+  savePrompts();
+  render();
 }
 
-// ════════════════════════════════════════
-// TODAY VIEW
-// ════════════════════════════════════════
-let currentCategory = null;
-let currentPrompt = null;
-let currentIdeas = Array(10).fill('');
-let todayPhase = 'category'; // category | prompt | input | done
+function deletePrompt(id) {
+  state.customPrompts = state.customPrompts.filter(p => p.id !== id);
+  savePrompts();
+  render();
+}
 
-function renderToday() {
-  const el = document.getElementById('view-today');
-  const streak = getStreak();
+function saveEditedPrompt(id) {
+  const text = state.editingPromptText.trim();
+  if (!text) return;
+  state.customPrompts = state.customPrompts.map(p =>
+    p.id === id ? { ...p, text } : p
+  );
+  state.editingPromptId = null;
+  state.editingPromptText = '';
+  savePrompts();
+  render();
+}
 
-  if (todayPhase === 'category') {
-    const todaySessions = state.sessions.filter(s => s.date === todayStr());
-    const todayCount = todaySessions.length;
-    el.innerHTML = `
-      <div class="fade-up">
-        <div class="streak-bar">
-          <div class="streak-num">${streak}</div>
-          <div class="streak-label">${streak === 1 ? 'day' : 'days'} streak<br>
-            <span style="font-size:12px">${formatDate(todayStr())}${todayCount ? ' · ' + todayCount + ' session' + (todayCount > 1 ? 's' : '') + ' today' : ''}</span>
-          </div>
+// ── Helpers ───────────────────────────────────────────────────
+function getCat(id) { return CATEGORIES.find(c => c.id === id) || { icon: '📝', label: 'Custom', color: '#8B9DAF' }; }
+function filledCount() { return state.ideas.filter(i => i.trim()).length; }
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// ── Render ────────────────────────────────────────────────────
+function render() {
+  const app = document.getElementById('app');
+  const views = {
+    home: renderHome,
+    session: renderSession,
+    prompts: renderPrompts,
+    history: renderHistory,
+  };
+  app.innerHTML = `<div class="view active">${(views[state.view] || renderHome)()}</div>`;
+  bindEvents();
+}
+
+function renderHome() {
+  const hasKey = !!getApiKey();
+  const cat = state.activeCategory ? getCat(state.activeCategory) : null;
+
+  return `
+    ${!hasKey ? `<div class="key-warning fade-up">
+      No Anthropic API key found. Go to your <a href="../" onclick="return false">App Store</a> settings (gear icon) and enter your key.
+    </div>` : ''}
+
+    <div class="fade-up" style="margin-bottom:28px">
+      <h1>Idea Machine</h1>
+      <p style="color:var(--text-muted);font-size:13px;margin-top:6px">
+        API-powered prompts × your domain intersections
+      </p>
+    </div>
+
+    <div class="stats fade-up">
+      ${[
+        { label: 'Streak', value: state.streak + 'd', color: 'var(--accent)' },
+        { label: 'Sessions', value: state.totalSessions, color: 'var(--text)' },
+        { label: 'Custom', value: state.customPrompts.length, color: 'var(--text-muted)' },
+      ].map(s => `
+        <div class="card stat-card">
+          <div class="stat-val" style="color:${s.color}">${s.value}</div>
+          <div class="stat-label">${s.label}</div>
         </div>
-        <h1>What's your arena${todayCount ? ' next' : ' today'}?</h1>
-        <p style="color:var(--text-muted);margin-top:6px">Pick a category, or let fate decide.</p>
-        <div class="category-grid" style="margin-top:20px">
-          ${Object.entries(CAT_META).filter(([key]) => key !== 'custom').map(([key, m]) => `
-            <button class="cat-btn" onclick="selectCategory('${key}')">
-              <span class="cat-icon">${m.icon}</span>
-              <span class="cat-name">${m.name}</span>
-            </button>
-          `).join('')}
-        </div>
-        <button class="btn btn-secondary" style="margin-top:8px" onclick="selectCategory('random')">
-          🎲 &nbsp;Surprise me
-        </button>
-        <button class="btn btn-secondary" style="margin-top:8px" onclick="showCustomPrompt()">
-          ✏️ &nbsp;Create my own
-        </button>
-      </div>
-    `;
-  } else if (todayPhase === 'prompt') {
-    el.innerHTML = `
-      <div class="fade-up">
-        <h3>${CAT_META[currentCategory].icon} ${CAT_META[currentCategory].name}</h3>
-        <div class="prompt-display">${currentPrompt}</div>
-        <div style="display:flex;gap:10px">
-          <button class="btn btn-secondary" style="flex:1" onclick="reshufflePrompt()">Different prompt</button>
-          <button class="btn btn-primary" style="flex:1" onclick="startWriting()">Let's go</button>
-        </div>
-      </div>
-    `;
-  } else if (todayPhase === 'custom') {
-    el.innerHTML = `
-      <div class="fade-up">
-        <h3>✏️ Create your own</h3>
-        <p style="color:var(--text-muted);margin:8px 0 16px">Write your own "10 things" prompt.</p>
-        <div style="display:flex;align-items:flex-start;gap:8px">
-          <span style="font-family:var(--serif);font-size:18px;font-style:italic;padding-top:10px;white-space:nowrap">10</span>
-          <textarea id="custom-prompt-input" class="idea-input" rows="2"
-            placeholder="ways to improve my morning routine…"
-            style="flex:1;font-family:var(--serif);font-size:18px;font-style:italic"
-            oninput="document.getElementById('custom-go-btn').disabled = !this.value.trim()"
-          ></textarea>
-        </div>
-        <button class="btn btn-primary" style="margin-top:16px" id="custom-go-btn" disabled
-          onclick="submitCustomPrompt()">Let's go</button>
-        <button class="btn btn-secondary" style="margin-top:8px"
-          onclick="todayPhase='category';renderToday()">Back</button>
-      </div>
-    `;
-    setTimeout(() => document.getElementById('custom-prompt-input')?.focus(), 100);
-  } else if (todayPhase === 'input') {
-    renderInputPhase(el);
-  } else if (todayPhase === 'completed') {
-    const session = state.sessions.find(s => s.id === lastSavedSessionId);
-    if (!session) { todayPhase = 'category'; renderToday(); return; }
-    el.innerHTML = `
-      <div class="fade-up" style="padding-top:12px">
-        <div class="completed-header">
-          <div class="completed-check">✓</div>
-          <h1>Saved!</h1>
-          <p style="color:var(--text-muted);margin-top:6px">${streak} day streak — keep building the muscle</p>
-        </div>
-        <div class="card" style="margin-top:20px">
-          <h3>${CAT_META[session.category].icon} ${CAT_META[session.category].name}</h3>
-          <p style="font-family:var(--serif);font-size:17px;font-style:italic;margin:10px 0 14px">${session.prompt}</p>
-          ${session.ideas.map((idea, i) => `
-            <div class="session-idea">
-              <span class="session-idea-num">${i+1}</span>
-              <span class="session-idea-text">${escHtml(idea.text)}</span>
-              <button class="star-btn ${idea.starred ? 'starred' : ''}" onclick="toggleStar('${session.id}',${i})">
-                ${idea.starred ? '★' : '☆'}
-              </button>
-            </div>
-          `).join('')}
-        </div>
-        <button class="btn btn-primary" style="margin-top:16px" onclick="todayPhase='category';currentIdeas=Array(10).fill('');renderToday()">
-          Start another list
-        </button>
-      </div>
-    `;
-  }
-}
+      `).join('')}
+    </div>
 
-function showCustomPrompt() {
-  todayPhase = 'custom';
-  renderToday();
-}
-
-function submitCustomPrompt() {
-  const input = document.getElementById('custom-prompt-input');
-  if (!input || !input.value.trim()) return;
-  let prompt = input.value.trim();
-  // Prepend "10 " if they didn't include it
-  if (!/^\d/.test(prompt)) prompt = '10 ' + prompt;
-  currentCategory = 'custom';
-  currentPrompt = prompt;
-  currentIdeas = Array(10).fill('');
-  todayPhase = 'input';
-  renderToday();
-}
-
-function selectCategory(cat) {
-  if (cat === 'random') {
-    const keys = Object.keys(CAT_META).filter(k => k !== 'custom');
-    cat = keys[Math.floor(Math.random() * keys.length)];
-  }
-  currentCategory = cat;
-  currentPrompt = pickPrompt(cat);
-  todayPhase = 'prompt';
-  renderToday();
-}
-
-function reshufflePrompt() {
-  currentPrompt = pickPrompt(currentCategory);
-  renderToday();
-}
-
-function startWriting() {
-  currentIdeas = Array(10).fill('');
-  todayPhase = 'input';
-  renderToday();
-}
-
-function renderInputPhase(el) {
-  const filled = currentIdeas.filter(i => i.trim()).length;
-  el.innerHTML = `
-    <div class="fade-up">
-      <h3>${CAT_META[currentCategory].icon} ${CAT_META[currentCategory].name}</h3>
-      <p style="font-family:var(--serif);font-size:18px;font-style:italic;margin:12px 0 4px">${currentPrompt}</p>
-      <div class="progress-bar"><div class="progress-fill" style="width:${filled*10}%"></div></div>
-      <div class="progress-text">${filled}/10 ideas</div>
-      <div class="dictate-bar">
-        <button class="btn-mic" id="mic-btn" onclick="toggleDictation()">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <rect x="9" y="1" width="6" height="12" rx="3"/>
-            <path d="M19 10v1a7 7 0 01-14 0v-1"/>
-            <line x1="12" y1="19" x2="12" y2="23"/>
-            <line x1="8" y1="23" x2="16" y2="23"/>
-          </svg>
-        </button>
-        <span class="dictate-hint" id="dictate-hint">Tap to dictate · say "next" to advance</span>
-      </div>
-      <div class="idea-list">
-        ${currentIdeas.map((idea, i) => `
-          <div class="idea-row">
-            <span class="idea-num">${i+1}</span>
-            <textarea class="idea-input${idea.trim() ? ' filled' : ''}"
-              rows="1" placeholder="Idea ${i+1}…"
-              oninput="ideaChanged(${i}, this)"
-              onfocus="ideaFocus(${i})">${idea}</textarea>
-          </div>
+    <div class="fade-up" style="margin-bottom:10px">
+      <div class="section-label">Generate a prompt</div>
+      <div class="cat-grid">
+        ${CATEGORIES.map(c => `
+          <button class="cat-btn" data-gen="${c.id}" ${state.isGenerating ? 'disabled' : ''}
+            style="opacity:${state.isGenerating ? 0.5 : 1};
+              ${state.activeCategory === c.id ? `border-color:${c.color};background:${c.color}11` : ''}">
+            <span class="icon">${c.icon}</span>
+            <span>${c.label}</span>
+          </button>
         `).join('')}
       </div>
-      <button class="btn btn-accent" onclick="saveTodaySession()" ${filled < 1 ? 'disabled style="opacity:0.4"' : ''}>
-        Save Today's Ideas
-      </button>
-      <button class="btn btn-secondary" style="margin-top:8px" onclick="todayPhase='category';currentIdeas=Array(10).fill('');renderToday()">
-        Start over
+    </div>
+
+    <div class="fade-up" style="margin-bottom:20px">
+      <button class="cat-btn" data-action="pick-custom" style="width:100%">
+        <span class="icon">✍️</span>
+        <span>Use Custom Prompt</span>
+        <span style="margin-left:auto;font-size:11px;color:var(--text-dim)">${state.customPrompts.length} saved</span>
       </button>
     </div>
-  `;
-  // Auto-resize textareas
-  el.querySelectorAll('.idea-input').forEach(autoResize);
-}
 
-function autoResize(ta) {
-  ta.style.height = 'auto';
-  ta.style.height = ta.scrollHeight + 'px';
-}
-
-function ideaChanged(i, ta) {
-  currentIdeas[i] = ta.value;
-  ta.classList.toggle('filled', ta.value.trim().length > 0);
-  autoResize(ta);
-  // Update progress
-  const filled = currentIdeas.filter(x => x.trim()).length;
-  const bar = document.querySelector('.progress-fill');
-  if (bar) bar.style.width = filled*10 + '%';
-  const txt = document.querySelector('.progress-text');
-  if (txt) txt.textContent = `${filled}/10 ideas`;
-  const saveBtn = document.querySelector('.btn-accent');
-  if (saveBtn) {
-    saveBtn.disabled = filled < 1;
-    saveBtn.style.opacity = filled < 1 ? '0.4' : '1';
-  }
-}
-
-let activeDictationIdx = 0;
-function ideaFocus(i) { activeDictationIdx = i; }
-
-function saveTodaySession() {
-  const session = {
-    id: Date.now().toString(36),
-    date: todayStr(),
-    category: currentCategory,
-    prompt: currentPrompt,
-    ideas: currentIdeas.map(t => ({ text: t.trim(), starred: false })).filter(i => i.text)
-  };
-  state.sessions.unshift(session);
-  saveState();
-  lastSavedSessionId = session.id;
-  todayPhase = 'completed';
-  renderToday();
-}
-
-let lastSavedSessionId = null;
-
-// ════════════════════════════════════════
-// ARCHIVE VIEW
-// ════════════════════════════════════════
-let archiveFilter = 'all';
-let archiveSearch = '';
-let expandedSession = null;
-
-function renderArchive() {
-  const list = document.getElementById('archive-list');
-  const randomC = document.getElementById('random-container');
-  let sessions = [...state.sessions];
-
-  // Random review banner
-  if (sessions.length > 1) {
-    randomC.innerHTML = `
-      <div class="random-banner">
-        <span>🔀 Review a random past list</span>
-        <button class="btn btn-sm btn-secondary" onclick="showRandomSession()">Surprise me</button>
+    ${state.isGenerating ? `
+      <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">
+        <div class="spinner" style="margin-bottom:8px"></div>
+        <div>Generating prompt...</div>
       </div>
-    `;
-  } else {
-    randomC.innerHTML = '';
-  }
+    ` : ''}
 
-  // Filter
-  if (archiveFilter === 'starred') {
-    sessions = sessions.filter(s => s.ideas.some(i => i.starred));
-  } else if (archiveFilter !== 'all') {
-    sessions = sessions.filter(s => s.category === archiveFilter);
-  }
-
-  // Search
-  if (archiveSearch.trim()) {
-    const q = archiveSearch.toLowerCase();
-    sessions = sessions.filter(s =>
-      s.prompt.toLowerCase().includes(q) ||
-      s.ideas.some(i => i.text.toLowerCase().includes(q))
-    );
-  }
-
-  if (sessions.length === 0) {
-    list.innerHTML = `
-      <div class="empty-state">
-        <h2>${state.sessions.length === 0 ? 'No ideas yet' : 'No matches'}</h2>
-        <p>${state.sessions.length === 0 ? 'Complete your first session to build the archive' : 'Try a different search or filter'}</p>
+    ${state.genError ? `
+      <div class="card fade-up" style="border-color:var(--danger);color:var(--danger);font-size:12px;margin-bottom:16px">
+        ${esc(state.genError)}
       </div>
-    `;
-    return;
-  }
+    ` : ''}
 
-  list.innerHTML = sessions.map(s => `
-    <div class="session-card" onclick="toggleExpand('${s.id}')">
-      <div class="session-meta">
-        <span class="session-date">${formatDate(s.date)}</span>
-        <span class="session-cat">${CAT_META[s.category]?.icon || ''} ${CAT_META[s.category]?.name || s.category}</span>
-      </div>
-      <div class="session-prompt">${escHtml(s.prompt)}</div>
-      <div class="session-count">${s.ideas.length} ideas${s.ideas.filter(i=>i.starred).length ? ' · ' + s.ideas.filter(i=>i.starred).length + ' ★' : ''}</div>
-      ${expandedSession === s.id ? `
-        <div class="session-ideas">
-          ${s.ideas.map((idea, i) => `
-            <div class="session-idea">
-              <span class="session-idea-num">${i+1}</span>
-              <span class="session-idea-text">${escHtml(idea.text)}</span>
-              <button class="star-btn ${idea.starred ? 'starred' : ''}" onclick="event.stopPropagation();toggleStar('${s.id}',${i})">
-                ${idea.starred ? '★' : '☆'}
-              </button>
-            </div>
-          `).join('')}
+    ${state.activePrompt && !state.isGenerating ? `
+      <div class="fade-up" style="margin-bottom:20px">
+        <div class="section-label">Your prompt</div>
+        <div class="card prompt-display" style="border-left-color:${cat?.color || 'var(--accent)'}">
+          <p class="prompt-text">${esc(state.activePrompt)}</p>
+          <div class="prompt-actions">
+            <button class="btn btn-primary" data-action="start">Start →</button>
+            ${state.activeCategory !== 'custom' ? `<button class="btn btn-ghost" data-action="reroll">↻ Reroll</button>` : ''}
+          </div>
         </div>
-      ` : ''}
+      </div>
+    ` : ''}
+
+    <div class="fade-up" style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-ghost" style="flex:1" data-nav="prompts">Manage Prompts</button>
+      <button class="btn btn-ghost" style="flex:1" data-nav="history">History (${state.sessions.length})</button>
     </div>
-  `).join('');
-}
 
-function toggleExpand(id) {
-  expandedSession = expandedSession === id ? null : id;
-  renderArchive();
-}
-
-function showRandomSession() {
-  const others = state.sessions.filter(s => s.date !== todayStr());
-  if (others.length === 0) return;
-  const pick = others[Math.floor(Math.random() * others.length)];
-  expandedSession = pick.id;
-  renderArchive();
-  // Scroll to it
-  setTimeout(() => {
-    const card = document.querySelector(`[onclick="toggleExpand('${pick.id}')"]`);
-    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 50);
-}
-
-function toggleStar(sessionId, ideaIdx) {
-  const s = state.sessions.find(s => s.id === sessionId);
-  if (s && s.ideas[ideaIdx] !== undefined) {
-    s.ideas[ideaIdx].starred = !s.ideas[ideaIdx].starred;
-    saveState();
-    // Re-render current view
-    if (document.getElementById('view-today').classList.contains('active')) renderToday();
-    else renderArchive();
-  }
-}
-
-// Search & filter handlers
-document.getElementById('search-input').addEventListener('input', e => {
-  archiveSearch = e.target.value;
-  renderArchive();
-});
-
-document.getElementById('filter-row').addEventListener('click', e => {
-  const pill = e.target.closest('.filter-pill');
-  if (!pill) return;
-  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-  pill.classList.add('active');
-  archiveFilter = pill.dataset.filter;
-  renderArchive();
-});
-
-// ════════════════════════════════════════
-// SETTINGS VIEW
-// ════════════════════════════════════════
-function renderSettings() {
-  const totalIdeas = state.sessions.reduce((sum, s) => sum + s.ideas.length, 0);
-  const starredIdeas = state.sessions.reduce((sum, s) => sum + s.ideas.filter(i=>i.starred).length, 0);
-  const streak = getStreak();
-
-  document.getElementById('stats-grid').innerHTML = `
-    <div class="stat-card"><div class="stat-num">${streak}</div><div class="stat-label">Day Streak</div></div>
-    <div class="stat-card"><div class="stat-num">${state.sessions.length}</div><div class="stat-label">Sessions</div></div>
-    <div class="stat-card"><div class="stat-num">${totalIdeas}</div><div class="stat-label">Total Ideas</div></div>
-    <div class="stat-card"><div class="stat-num">${starredIdeas}</div><div class="stat-label">Starred</div></div>
+    ${state.showPromptPicker ? renderPromptPicker() : ''}
   `;
 }
 
-function exportData() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `idea-machine-export-${todayStr()}.json`;
-  a.click(); URL.revokeObjectURL(url);
+function renderPromptPicker() {
+  return `
+    <div class="modal-overlay" data-action="close-picker">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Custom Prompts</h3>
+          <button class="btn btn-ghost btn-sm" data-action="close-picker">✕</button>
+        </div>
+        ${state.customPrompts.length === 0 ? `
+          <p style="color:var(--text-dim);font-size:13px;text-align:center;padding:20px 0">
+            No custom prompts yet — add some in Manage Prompts
+          </p>
+        ` : `
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${state.customPrompts.map(p => `
+              <button class="card" data-use-prompt="${esc(p.id)}"
+                style="cursor:pointer;text-align:left;font-size:13px;line-height:1.5;font-family:var(--mono)">
+                ${esc(p.text)}
+              </button>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    </div>
+  `;
 }
 
-function showDeleteModal() {
-  document.getElementById('delete-modal').classList.add('show');
-}
-function hideDeleteModal() {
-  document.getElementById('delete-modal').classList.remove('show');
-}
-function deleteAllData() {
-  state = { sessions: [], usedPrompts: {}, settings: { notifications: false, reminderTime: '08:00' } };
-  saveState();
-  hideDeleteModal();
-  currentCategory = null; currentPrompt = null;
-  currentIdeas = Array(10).fill('');
-  todayPhase = 'category';
-  switchView('today');
+function renderSession() {
+  const filled = filledCount();
+  const cat = getCat(state.activeCategory);
+
+  return `
+    <button class="btn-back" data-nav="home">← Back</button>
+
+    <div class="card prompt-display fade-up" style="border-left-color:${cat.color};margin-bottom:16px">
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">${cat.label}</div>
+      <p style="font-size:14px;line-height:1.7">${esc(state.activePrompt)}</p>
+    </div>
+
+    <div class="fade-up" style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:${(filled/10)*100}%;background:${filled===10?'var(--success)':'var(--accent)'}"></div>
+      </div>
+      <span class="progress-label" style="color:${filled===10?'var(--success)':'var(--text-muted)'}">${filled}/10</span>
+    </div>
+
+    <div>
+      ${state.ideas.map((idea, i) => `
+        <div class="idea-row">
+          <span class="idea-num ${idea.trim() ? 'filled' : ''}">${i+1}</span>
+          <textarea data-idea="${i}" rows="1"
+            placeholder="${i===0?'Your first idea...':i===9?'The hard one — dig deep':'Idea '+(i+1)}">${esc(idea)}</textarea>
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="margin-top:16px;display:flex;gap:8px">
+      <button class="btn ${filled===10?'btn-success':'btn-primary'}" style="flex:1" data-action="save" ${filled===0?'disabled':''}>
+        ${filled===10 ? '✓ Save Complete Session' : `Save (${filled}/10)`}
+      </button>
+    </div>
+  `;
 }
 
-// ════════════════════════════════════════
-// DICTATION (Web Speech API)
-// ════════════════════════════════════════
-let recognition = null;
-let isRecording = false;
+function renderPrompts() {
+  return `
+    <button class="btn-back" data-nav="home">← Back</button>
 
-function toggleDictation() {
-  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    alert('Speech recognition is not supported in this browser. Try Chrome or Safari.');
-    return;
+    <div class="fade-up" style="margin-bottom:20px">
+      <h2>Custom Prompts</h2>
+      <p style="color:var(--text-muted);font-size:12px;margin-top:6px">
+        Capture prompts as they come to you. Use them anytime.
+      </p>
+    </div>
+
+    <div class="fade-up" style="margin-bottom:24px">
+      <textarea id="new-prompt-input" rows="3" placeholder="Enter a new ideation prompt..."
+        style="margin-bottom:8px">${esc(state.newPromptText)}</textarea>
+      <button class="btn btn-primary" data-action="add-prompt" ${!state.newPromptText.trim()?'disabled':''}>
+        + Add Prompt
+      </button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${state.customPrompts.length === 0 ? `
+        <p style="color:var(--text-dim);font-size:13px;text-align:center;padding:20px">No custom prompts yet</p>
+      ` : ''}
+      ${state.customPrompts.map(p => `
+        <div class="card prompt-item fade-up">
+          ${state.editingPromptId === p.id ? `
+            <textarea id="edit-prompt-input" rows="3"
+              style="margin-bottom:8px;background:var(--bg);border-color:var(--border-focus)">${esc(state.editingPromptText)}</textarea>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-primary btn-sm" data-action="save-edit" data-id="${p.id}">Save</button>
+              <button class="btn btn-ghost btn-sm" data-action="cancel-edit">Cancel</button>
+            </div>
+          ` : `
+            <p class="prompt-item-text">${esc(p.text)}</p>
+            <div class="prompt-item-date">${new Date(p.createdAt).toLocaleDateString()}</div>
+            <div class="prompt-item-actions">
+              <button class="btn btn-ghost btn-sm" data-action="use-prompt-direct" data-id="${p.id}" title="Use">▶</button>
+              <button class="btn btn-ghost btn-sm" data-action="edit-prompt" data-id="${p.id}" title="Edit">✎</button>
+              <button class="btn btn-ghost btn-sm btn-danger" data-action="delete-prompt" data-id="${p.id}" title="Delete">✕</button>
+            </div>
+          `}
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderHistory() {
+  return `
+    <button class="btn-back" data-nav="home">← Back</button>
+
+    <div class="fade-up" style="margin-bottom:20px">
+      <h2>History</h2>
+    </div>
+
+    ${state.sessions.length === 0 ? `
+      <p style="color:var(--text-dim);font-size:13px;text-align:center;padding:40px">
+        No sessions yet — start your first one
+      </p>
+    ` : `
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${state.sessions.map(s => {
+          const cat = getCat(s.category);
+          const count = s.filledCount || s.ideas.filter(x => x.trim()).length;
+          return `
+            <details class="card fade-up">
+              <summary class="history-summary">
+                <span class="history-icon">${cat.icon}</span>
+                <div style="flex:1;min-width:0">
+                  <div class="history-meta">${new Date(s.date).toLocaleDateString()} · ${count}/10</div>
+                  <div class="history-prompt-preview">${esc(s.prompt.slice(0,80))}${s.prompt.length>80?'…':''}</div>
+                </div>
+                <span class="history-expand">▸</span>
+              </summary>
+              <div class="history-body">
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${esc(s.prompt)}</div>
+                <ol>
+                  ${s.ideas.filter(x=>x.trim()).map(idea => `<li>${esc(idea)}</li>`).join('')}
+                </ol>
+              </div>
+            </details>
+          `;
+        }).join('')}
+      </div>
+    `}
+  `;
+}
+
+// ── Event Binding ─────────────────────────────────────────────
+function bindEvents() {
+  // Navigation
+  document.querySelectorAll('[data-nav]').forEach(el => {
+    el.addEventListener('click', () => {
+      state.view = el.dataset.nav;
+      render();
+    });
+  });
+
+  // Generate prompt
+  document.querySelectorAll('[data-gen]').forEach(el => {
+    el.addEventListener('click', () => generatePrompt(el.dataset.gen));
+  });
+
+  // Actions
+  document.querySelectorAll('[data-action]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      const action = el.dataset.action;
+
+      if (action === 'start') startSession(state.activePrompt, state.activeCategory);
+      else if (action === 'reroll' && state.activeCategory) generatePrompt(state.activeCategory);
+      else if (action === 'save') saveSession();
+      else if (action === 'pick-custom') { state.showPromptPicker = true; render(); }
+      else if (action === 'close-picker') { state.showPromptPicker = false; render(); }
+      else if (action === 'add-prompt') addCustomPrompt();
+      else if (action === 'save-edit') saveEditedPrompt(el.dataset.id);
+      else if (action === 'cancel-edit') { state.editingPromptId = null; render(); }
+      else if (action === 'edit-prompt') {
+        const p = state.customPrompts.find(p => p.id === el.dataset.id);
+        if (p) { state.editingPromptId = p.id; state.editingPromptText = p.text; render(); }
+      }
+      else if (action === 'delete-prompt') deletePrompt(el.dataset.id);
+      else if (action === 'use-prompt-direct') {
+        const p = state.customPrompts.find(p => p.id === el.dataset.id);
+        if (p) { state.activePrompt = p.text; state.activeCategory = 'custom'; state.view = 'home'; render(); }
+      }
+    });
+  });
+
+  // Use custom prompt from picker
+  document.querySelectorAll('[data-use-prompt]').forEach(el => {
+    el.addEventListener('click', () => {
+      const p = state.customPrompts.find(p => p.id === el.dataset.usePrompt);
+      if (p) {
+        state.activePrompt = p.text;
+        state.activeCategory = 'custom';
+        state.showPromptPicker = false;
+        render();
+      }
+    });
+  });
+
+  // Idea textareas
+  document.querySelectorAll('[data-idea]').forEach(el => {
+    const idx = parseInt(el.dataset.idea);
+
+    // Auto-resize
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+
+    el.addEventListener('input', () => {
+      state.ideas[idx] = el.value;
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+      // Update progress + save button without full re-render
+      const filled = filledCount();
+      const bar = document.querySelector('.progress-fill');
+      const label = document.querySelector('.progress-label');
+      const num = el.closest('.idea-row').querySelector('.idea-num');
+      if (bar) { bar.style.width = (filled/10)*100+'%'; bar.style.background = filled===10?'var(--success)':'var(--accent)'; }
+      if (label) { label.textContent = filled+'/10'; label.style.color = filled===10?'var(--success)':'var(--text-muted)'; }
+      if (num) { num.className = 'idea-num' + (el.value.trim() ? ' filled' : ''); }
+      const saveBtn = document.querySelector('[data-action="save"]');
+      if (saveBtn) {
+        saveBtn.disabled = filled === 0;
+        saveBtn.className = 'btn ' + (filled===10?'btn-success':'btn-primary');
+        saveBtn.style.flex = '1';
+        saveBtn.textContent = filled===10 ? '✓ Save Complete Session' : `Save (${filled}/10)`;
+      }
+    });
+
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey && idx < 9) {
+        e.preventDefault();
+        const next = document.querySelector(`[data-idea="${idx+1}"]`);
+        if (next) next.focus();
+      }
+    });
+  });
+
+  // New prompt input
+  const newInput = document.getElementById('new-prompt-input');
+  if (newInput) {
+    newInput.addEventListener('input', () => {
+      state.newPromptText = newInput.value;
+      const btn = document.querySelector('[data-action="add-prompt"]');
+      if (btn) btn.disabled = !newInput.value.trim();
+    });
   }
 
-  if (isRecording) {
-    stopDictation();
-    return;
+  // Edit prompt input
+  const editInput = document.getElementById('edit-prompt-input');
+  if (editInput) {
+    editInput.addEventListener('input', () => {
+      state.editingPromptText = editInput.value;
+    });
   }
-
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SpeechRecognition();
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.lang = 'en-US';
-
-  recognition.onresult = (e) => {
-    let final = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) {
-        final += e.results[i][0].transcript;
-      }
-    }
-    if (final) {
-      // Check for "next" keyword (strip it and advance)
-      const nextPattern = /\b(next)\b/i;
-      const hasNext = nextPattern.test(final.trim());
-      let cleanText = final.replace(nextPattern, '').trim();
-
-      // Current slot
-      let idx = activeDictationIdx;
-
-      if (cleanText) {
-        currentIdeas[idx] = (currentIdeas[idx] + ' ' + cleanText).trim();
-      }
-
-      // Advance logic — but guard against double-jump:
-      // If "next" is said alone (no new text), only advance if current slot
-      // already has content. If it's empty, we already moved past the last idea.
-      const currentHasContent = currentIdeas[idx] && currentIdeas[idx].trim();
-      const shouldAdvance = cleanText || (hasNext && currentHasContent);
-
-      if (shouldAdvance) {
-        const nextEmpty = currentIdeas.findIndex((x, i) => i > idx && !x.trim());
-        if (nextEmpty !== -1) activeDictationIdx = nextEmpty;
-        else {
-          const anyEmpty = currentIdeas.findIndex(x => !x.trim());
-          if (anyEmpty !== -1) activeDictationIdx = anyEmpty;
-        }
-      }
-
-      renderInputPhase(document.getElementById('view-today'));
-    }
-  };
-
-  recognition.onerror = () => stopDictation();
-  recognition.onend = () => {
-    if (isRecording) {
-      // Restart if user hasn't manually stopped
-      try { recognition.start(); } catch(e) { stopDictation(); }
-    }
-  };
-
-  recognition.start();
-  isRecording = true;
-  const btn = document.getElementById('mic-btn');
-  if (btn) btn.classList.add('recording');
-  const hint = document.getElementById('dictate-hint');
-  if (hint) hint.textContent = 'Listening… say "next" to advance, tap to stop';
 }
 
-function stopDictation() {
-  isRecording = false;
-  if (recognition) { recognition.stop(); recognition = null; }
-  const btn = document.getElementById('mic-btn');
-  if (btn) btn.classList.remove('recording');
-  const hint = document.getElementById('dictate-hint');
-  if (hint) hint.textContent = 'Tap to dictate';
-}
-
-// ════════════════════════════════════════
-// UTILITIES
-// ════════════════════════════════════════
-function escHtml(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-
-function formatDate(ds) {
-  const d = new Date(ds + 'T12:00:00');
-  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-// ════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════
+// ── Init ──────────────────────────────────────────────────────
 loadState();
-renderToday();
-
-// Register service worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
-}
+render();
 </script>
 </body>
 </html>
