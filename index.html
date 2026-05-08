@@ -838,21 +838,6 @@
         <p class="modal-sub">Describe what you want built. Be specific — functionality, layout, data it should track. Dictate or type.</p>
 
         <div class="field-group">
-          <label class="field-label">App Name</label>
-          <input type="text" class="field-input" id="app-name" placeholder="e.g. Trade Journal">
-        </div>
-
-        <div class="field-group">
-          <label class="field-label">Short Description (for tile)</label>
-          <input type="text" class="field-input" id="app-desc" placeholder="e.g. Futures log">
-        </div>
-
-        <div class="field-group">
-          <label class="field-label">Category</label>
-          <input type="text" class="field-input" id="app-category" placeholder="e.g. Trading, Health, Creative">
-        </div>
-
-        <div class="field-group">
           <label class="field-label">What should this app do?</label>
           <div class="voice-row">
             <textarea class="field-input" id="app-prompt" placeholder="Describe the app in detail. What does it track? What interactions? What should it look like? The more detail, the better the result."></textarea>
@@ -1162,6 +1147,23 @@
     let generatedHTML = '';
     let conversationHistory = [];
     let editingApp = null; // null = creating new, object = editing existing
+    let parsedMeta = { name: 'Untitled', desc: 'New app', category: 'Utility' };
+
+    function parseMeta(raw) {
+      const match = raw.match(/<!--\s*META:\s*(\{.*?\})\s*-->/);
+      if (match) {
+        try {
+          return JSON.parse(match[1]);
+        } catch(e) { /* fall through */ }
+      }
+      // Fallback: try to extract from <title>
+      const titleMatch = raw.match(/<title>([^<]+)<\/title>/);
+      return {
+        name: titleMatch ? titleMatch[1].trim() : 'Untitled',
+        desc: 'New app',
+        category: 'Utility'
+      };
+    }
 
     function openCreateModal() {
       if (!getKey('anthropic_key') || !getKey('github_pat')) {
@@ -1182,11 +1184,8 @@
       }
       editingApp = app;
       resetCreateModal();
-
-      // Pre-fill step 1 fields from existing app
-      document.getElementById('app-name').value = app.name;
-      document.getElementById('app-desc').value = app.desc;
-      document.getElementById('app-category').value = app.category;
+      editingApp = app; // re-set after reset clears it
+      parsedMeta = { name: app.name, desc: app.desc, category: app.category };
 
       // Skip to step 2 and fetch existing source
       showStep(2);
@@ -1225,13 +1224,11 @@
     }
 
     function resetCreateModal() {
-      document.getElementById('app-name').value = '';
-      document.getElementById('app-desc').value = '';
-      document.getElementById('app-category').value = '';
       document.getElementById('app-prompt').value = '';
       document.getElementById('revision-prompt').value = '';
       generatedHTML = '';
       conversationHistory = [];
+      parsedMeta = { name: 'Untitled', desc: 'New app', category: 'Utility' };
       editingApp = null;
       showStep(1);
     }
@@ -1319,18 +1316,21 @@
     const SYSTEM_PROMPT = `You are a frontend engineer building single-file HTML apps for a personal PWA app store.
 
 REQUIREMENTS — follow these exactly:
-1. Output ONLY the complete HTML file. No explanation, no markdown fences, no commentary. Start with <!DOCTYPE html> and end with </html>.
-2. The app must be a single self-contained .html file — inline all CSS and JS.
-3. Use localStorage for any data persistence. Namespace keys with a prefix derived from the app name.
-4. Mobile-first, responsive design. Must work beautifully on iPhone (375px viewport) and desktop.
-5. Dark theme by default: background #0a0a0c, text #f5f1e8, accent #d4a574. Use this palette unless the user specifies otherwise.
-6. Use clean, modern typography. Google Fonts are fine (via CDN link).
-7. Add a small back-arrow (←) link in the top-left that navigates to "../" (the launcher).
-8. No external JS frameworks unless explicitly requested. Vanilla JS preferred.
-9. The app should be production-quality — not a prototype. Handle edge cases, empty states, and errors gracefully.
-10. Include a <title> tag with the app name.
-11. Include viewport meta tag and apple-mobile-web-app-capable meta tags for PWA behavior.
-12. If the app involves timers, counters, or tracking, persist state across sessions via localStorage.`;
+1. Your FIRST line of output MUST be a JSON metadata comment in exactly this format:
+   <!-- META: {"name":"App Name","desc":"Short 2-4 word description","category":"OneWord"} -->
+   The name should be concise (2-3 words max). The desc is what appears on the launcher tile (e.g. "Daily 10 ideas", "Futures log", "Body by Science"). The category is a single word (e.g. Creative, Health, Trading, Wellness, Utility, Finance, Productivity).
+2. Immediately after the META comment, output the complete HTML file starting with <!DOCTYPE html> and ending with </html>. No other explanation, no markdown fences, no commentary.
+3. The app must be a single self-contained .html file — inline all CSS and JS.
+4. Use localStorage for any data persistence. Namespace keys with a prefix derived from the app name.
+5. Mobile-first, responsive design. Must work beautifully on iPhone (375px viewport) and desktop.
+6. Dark theme by default: background #0a0a0c, text #f5f1e8, accent #d4a574. Use this palette unless the user specifies otherwise.
+7. Use clean, modern typography. Google Fonts are fine (via CDN link).
+8. Add a small back-arrow (←) link in the top-left that navigates to "../" (the launcher).
+9. No external JS frameworks unless explicitly requested. Vanilla JS preferred.
+10. The app should be production-quality — not a prototype. Handle edge cases, empty states, and errors gracefully.
+11. Include a <title> tag with the app name.
+12. Include viewport meta tag and apple-mobile-web-app-capable meta tags for PWA behavior.
+13. If the app involves timers, counters, or tracking, persist state across sessions via localStorage.`;
 
     async function callAnthropic(messages) {
       const resp = await fetch(ANTHROPIC_API, {
@@ -1360,6 +1360,8 @@ REQUIREMENTS — follow these exactly:
       // Strip markdown fences if model included them despite instructions
       let html = raw.trim();
       html = html.replace(/^```(?:html)?\s*/i, '').replace(/\s*```\s*$/, '');
+      // Strip META comment line (metadata already parsed separately)
+      html = html.replace(/<!--\s*META:\s*\{.*?\}\s*-->\s*/s, '');
       // Ensure it starts with doctype or <html
       const dtIdx = html.indexOf('<!DOCTYPE');
       const htmlIdx = html.indexOf('<html');
@@ -1372,12 +1374,10 @@ REQUIREMENTS — follow these exactly:
     }
 
     async function startGeneration() {
-      const name = document.getElementById('app-name').value.trim();
-      const desc = document.getElementById('app-desc').value.trim();
       const prompt = document.getElementById('app-prompt').value.trim();
 
-      if (!name || !prompt) {
-        alert('Please provide at least an app name and description of what it should do.');
+      if (!prompt) {
+        alert('Please describe what the app should do.');
         return;
       }
 
@@ -1388,20 +1388,14 @@ REQUIREMENTS — follow these exactly:
 
       const line = logLine('gen-log', 'Generating app with Claude Sonnet…');
 
-      const userMsg = `Build an app called "${name}".
-Short description: ${desc || name}
-Category: ${document.getElementById('app-category').value.trim() || 'Utility'}
-
-Here's what it should do:
-${prompt}`;
-
-      conversationHistory = [{ role: 'user', content: userMsg }];
+      conversationHistory = [{ role: 'user', content: prompt }];
 
       try {
         const raw = await callAnthropic(conversationHistory);
         conversationHistory.push({ role: 'assistant', content: raw });
+        parsedMeta = parseMeta(raw);
         generatedHTML = extractHTML(raw);
-        updateLogLine(line, 'App generated', 'ok');
+        updateLogLine(line, `Generated: ${parsedMeta.name}`, 'ok');
         showPreview();
       } catch (err) {
         updateLogLine(line, 'Generation failed', 'fail');
@@ -1508,9 +1502,9 @@ ${prompt}`;
       document.getElementById('deploy-log').innerHTML = '';
       document.getElementById('deploy-done').style.display = 'none';
 
-      const name = document.getElementById('app-name').value.trim();
-      const desc = document.getElementById('app-desc').value.trim() || name;
-      const category = document.getElementById('app-category').value.trim() || 'Utility';
+      const name = editingApp ? editingApp.name : parsedMeta.name;
+      const desc = editingApp ? editingApp.desc : (parsedMeta.desc || name);
+      const category = editingApp ? editingApp.category : (parsedMeta.category || 'Utility');
       const isEdit = !!editingApp;
       const filePath = isEdit ? editingApp.url : `apps/${slugify(name)}.html`;
       const filename = filePath.replace('apps/', '');
