@@ -191,13 +191,13 @@
   .breath-mode-btn .mode-name { display: block; font-weight: 600; font-size: 13px; }
   .breath-mode-btn .mode-desc { display: block; font-size: 10px; margin-top: 1px; }
 
-  .bell-row {
+  .bell-row, .toggle-row {
     display: flex; align-items: center; justify-content: space-between;
     padding: 5px 0;
     border-bottom: 1px solid rgba(255,255,255,0.04);
   }
-  .bell-row:last-child { border-bottom: none; }
-  .bell-label { font-size: 14px; }
+  .bell-row:last-child, .toggle-row:last-child { border-bottom: none; }
+  .bell-label, .toggle-label { font-size: 14px; }
   .toggle {
     width: 42px; height: 24px;
     border-radius: 12px; border: none;
@@ -290,6 +290,10 @@
         <button class="breath-stepper-btn" data-target="exhale" data-dir="1">+</button>
       </div>
     </div>
+    <div class="toggle-row" style="margin-top:8px;">
+      <span class="toggle-label">Breath tick</span>
+      <button class="toggle" id="tickToggle"></button>
+    </div>
   </div>
 
   <div class="setting-group">
@@ -309,6 +313,7 @@ const S = {
   breathMode: 'free',
   freeInhale: 4,
   freeExhale: 4,
+  breathTick: true,
   bells: {},
   running: false,
   paused: false,
@@ -328,13 +333,21 @@ function initAudio(){
   silentAudio.setAttribute('playsinline','');
   silentAudio.setAttribute('webkit-playsinline','');
   silentAudio.loop=true;
-  const buf=new ArrayBuffer(44+8000),v=new DataView(buf);
-  wS(v,0,'RIFF');v.setUint32(4,36+8000,true);wS(v,8,'WAVE');
+
+  // 2-second 8kHz mono WAV with a smooth sub-audible 1Hz sine wave.
+  // Amplitude 2 out of 128 — completely inaudible but enough to keep
+  // iOS from classifying the stream as silent and suspending playback.
+  const sr=8000, sec=2, n=sr*sec;
+  const buf=new ArrayBuffer(44+n), v=new DataView(buf);
+  wS(v,0,'RIFF');v.setUint32(4,36+n,true);wS(v,8,'WAVE');
   wS(v,12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);
-  v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);
+  v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr,true);
   v.setUint16(32,1,true);v.setUint16(34,8,true);
-  wS(v,36,'data');v.setUint32(40,8000,true);
-  const b=new Uint8Array(buf);for(let i=44;i<44+8000;i++)b[i]=128;b[44]=129;
+  wS(v,36,'data');v.setUint32(40,n,true);
+  const bytes=new Uint8Array(buf);
+  for(let i=0;i<n;i++){
+    bytes[44+i]=128+Math.round(2*Math.sin(2*Math.PI*(i/n)));
+  }
   silentAudio.src=URL.createObjectURL(new Blob([buf],{type:'audio/wav'}));
 }
 
@@ -395,6 +408,34 @@ function bellFallback(type){
   a.play().catch(()=>{});
 }
 
+// Soft tick sound for breathing rhythm — a gentle woody click
+function playTick(){
+  if(!audioCtx||!S.breathTick)return;
+  if(audioCtx.state==='suspended')audioCtx.resume();
+  const t=audioCtx.currentTime;
+  // Short noise burst filtered to a soft click
+  const duration=0.04;
+  const bufSize=Math.floor(audioCtx.sampleRate*duration);
+  const noiseBuf=audioCtx.createBuffer(1,bufSize,audioCtx.sampleRate);
+  const data=noiseBuf.getChannelData(0);
+  for(let i=0;i<bufSize;i++){
+    // Shaped noise: sharp attack, fast decay
+    const env=Math.exp(-i/(bufSize*0.15));
+    data[i]=(Math.random()*2-1)*env;
+  }
+  const src=audioCtx.createBufferSource();
+  src.buffer=noiseBuf;
+  // Bandpass filter for a warm, woody character
+  const bp=audioCtx.createBiquadFilter();
+  bp.type='bandpass';
+  bp.frequency.value=1800;
+  bp.Q.value=1.5;
+  const gain=audioCtx.createGain();
+  gain.gain.value=0.08;
+  src.connect(bp);bp.connect(gain);gain.connect(audioCtx.destination);
+  src.start(t);
+}
+
 /* ── Breathing ─────────────────────────────────── */
 function getPhases(){
   if(S.breathMode==='free')return[
@@ -414,7 +455,7 @@ function getPhases(){
   ];
 }
 
-let bFrame=null,bT0=0;
+let bFrame=null,bT0=0,lastTickSec=-1;
 
 function bState(el){
   const ph=getPhases(),cyc=ph.reduce((s,p)=>s+p.duration,0),pos=el%cyc;
@@ -434,12 +475,22 @@ function animB(){
   else sc=phase.scale;
   ci.style.transform=`translate(-50%,-50%) scale(${sc})`;
   ci.style.background=`radial-gradient(circle,${phase.color} 0%,rgba(176,143,90,0.05) 100%)`;
-  lb.textContent=`${phase.name}\n${Math.ceil(phase.duration*(1-progress))}`;
+
+  const rem=Math.ceil(phase.duration*(1-progress));
+  lb.textContent=`${phase.name}\n${rem}`;
+
+  // Fire tick on each new second boundary within the phase
+  const elSec=Math.floor(el);
+  if(elSec!==lastTickSec){
+    lastTickSec=elSec;
+    playTick();
+  }
+
   bFrame=requestAnimationFrame(animB);
 }
 
 function ease(t){return-(Math.cos(Math.PI*t)-1)/2;}
-function startB(){bT0=performance.now()/1000;document.getElementById('circleInner').classList.add('breathing');animB();}
+function startB(){bT0=performance.now()/1000;lastTickSec=-1;document.getElementById('circleInner').classList.add('breathing');animB();}
 function stopB(){
   if(bFrame)cancelAnimationFrame(bFrame);bFrame=null;
   const ci=document.getElementById('circleInner');
@@ -462,7 +513,6 @@ function tick(){
   const rem=Math.max(0,S.duration*60-el);
   document.getElementById('timeRemaining').textContent=fmt(rem);
   document.getElementById('timeElapsed').textContent=fmt(el)+' elapsed';
-  // Check bells
   for(let m=5;m<S.duration;m+=5){
     if(S.bells[m]&&el>=m*60&&!bellsDone.has(m)){
       if(el-m*60<2){bellsDone.add(m);playBell('interval');}
@@ -497,7 +547,7 @@ function resumeTimer(){
   S.pauseOffset+=Date.now()-S.pauseStart;
   S.paused=false;S.pauseStart=null;
   document.body.classList.remove('paused');
-  bT0=performance.now()/1000;animB();updHint();
+  bT0=performance.now()/1000;lastTickSec=-1;animB();updHint();
 }
 
 function resetTimer(){
@@ -573,7 +623,6 @@ circle.addEventListener('touchend',e=>{
 
 circle.addEventListener('touchcancel',()=>{clearTimeout(lpt);});
 
-// Mouse fallback
 circle.addEventListener('mousedown',()=>{
   lpFired=false;
   if(S.running)lpt=setTimeout(()=>{lpFired=true;resetTimer();},800);
@@ -621,12 +670,18 @@ function updBreathUI(){
   document.getElementById('breathSteppers').style.display=S.breathMode==='free'?'flex':'none';
 }
 
+// Breath tick toggle
+const tickToggleEl=document.getElementById('tickToggle');
+tickToggleEl.addEventListener('click',()=>{
+  S.breathTick=!S.breathTick;
+  tickToggleEl.classList.toggle('on',S.breathTick);
+  savePref();
+});
+
 /* ── Bells ─────────────────────────────────────── */
 function rebuildBells(){
-  // Build a clean bells object for the current duration
   const fresh={};
   for(let m=5;m<S.duration;m+=5){
-    // Preserve existing preference if it exists, default to true
     fresh[m]=(m in S.bells)?S.bells[m]:true;
   }
   S.bells=fresh;
@@ -664,7 +719,7 @@ function savePref(){
   localStorage.setItem('med_pref',JSON.stringify({
     duration:S.duration,breathMode:S.breathMode,
     freeInhale:S.freeInhale,freeExhale:S.freeExhale,
-    bells:S.bells,
+    breathTick:S.breathTick,bells:S.bells,
   }));
 }
 
@@ -676,6 +731,7 @@ function loadPref(){
       S.breathMode=p.breathMode||'free';
       S.freeInhale=p.freeInhale||4;
       S.freeExhale=p.freeExhale||4;
+      S.breathTick=p.breathTick!==undefined?p.breathTick:true;
       if(p.bells)S.bells=p.bells;
     }
   }catch(e){}
@@ -687,6 +743,7 @@ document.getElementById('durVal').textContent=S.duration+' min';
 document.getElementById('timeRemaining').textContent=fmt(S.duration*60);
 document.getElementById('inhaleVal').textContent=S.freeInhale+'s';
 document.getElementById('exhaleVal').textContent=S.freeExhale+'s';
+tickToggleEl.classList.toggle('on',S.breathTick);
 document.querySelectorAll('.breath-mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===S.breathMode));
 updBreathUI();rebuildBells();updWeekly();updHint();
 </script>
