@@ -355,7 +355,7 @@ function wS(v,o,s){for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));}
 
 function startSilent(){
   if(!silentAudio)return;
-  silentAudio.volume=0.01; 
+  silentAudio.volume=0; 
   silentAudio.play().catch(()=>{});
   silentIv=setInterval(()=>{
     if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
