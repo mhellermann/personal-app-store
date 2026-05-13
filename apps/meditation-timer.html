@@ -329,24 +329,36 @@ let audioCtx=null, silentAudio=null, silentIv=null;
 function initAudio(){
   if(audioCtx)return;
   audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  // Keep AudioContext alive with a silent oscillator (no artifacts)
-  const keepAlive=audioCtx.createOscillator();
-  const silence=audioCtx.createGain();
+
+  // Keep AudioContext alive by piping a silent oscillator through
+  // a MediaStreamDestination into an <audio> element. iOS requires
+  // an active <audio> element to maintain the media session. The
+  // oscillator at near-zero gain through Web Audio has no artifacts.
+  var keepAlive=audioCtx.createOscillator();
+  var silence=audioCtx.createGain();
   silence.gain.value=0.0001;
+  var streamDest=audioCtx.createMediaStreamDestination();
   keepAlive.connect(silence);
   silence.connect(audioCtx.destination);
+  silence.connect(streamDest);
   keepAlive.start();
+  silentAudio=document.createElement('audio');
+  silentAudio.setAttribute('playsinline','');
+  silentAudio.srcObject=streamDest.stream;
 }
 
 function wS(v,o,s){for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));}
 
 function startSilent(){
+  if(silentAudio)silentAudio.play().catch(()=>{});
   silentIv=setInterval(()=>{
     if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
+    if(silentAudio&&silentAudio.paused)silentAudio.play().catch(()=>{});
   },3000);
 }
 
 function stopSilent(){
+  if(silentAudio)silentAudio.pause();
   if(silentIv)clearInterval(silentIv);silentIv=null;
 }
 
@@ -391,24 +403,21 @@ function bellFallback(type){
   a.play().catch(()=>{});
 }
 
-// Soft tick sound for breathing rhythm — a gentle woody click
+// Soft tick sound for breathing rhythm
 function playTick(){
   if(!audioCtx||!S.breathTick)return;
   if(audioCtx.state==='suspended')audioCtx.resume();
   const t=audioCtx.currentTime;
-  // Short noise burst filtered to a soft click
   const duration=0.04;
   const bufSize=Math.floor(audioCtx.sampleRate*duration);
   const noiseBuf=audioCtx.createBuffer(1,bufSize,audioCtx.sampleRate);
   const data=noiseBuf.getChannelData(0);
   for(let i=0;i<bufSize;i++){
-    // Shaped noise: sharp attack, fast decay
     const env=Math.exp(-i/(bufSize*0.15));
     data[i]=(Math.random()*2-1)*env;
   }
   const src=audioCtx.createBufferSource();
   src.buffer=noiseBuf;
-  // Bandpass filter for a warm, woody character
   const bp=audioCtx.createBiquadFilter();
   bp.type='bandpass';
   bp.frequency.value=1800;
@@ -462,7 +471,7 @@ function animB(){
   const rem=Math.ceil(phase.duration*(1-progress));
   lb.textContent=`${phase.name}\n${rem}`;
 
-  // Fire tick on each new second boundary within the phase
+  // Fire tick on each new second boundary
   const elSec=Math.floor(el);
   if(elSec!==lastTickSec){
     lastTickSec=elSec;
