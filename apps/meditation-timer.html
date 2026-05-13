@@ -332,7 +332,7 @@ function initAudio(){
   // Keep AudioContext alive with a silent oscillator (no artifacts)
   const keepAlive=audioCtx.createOscillator();
   const silence=audioCtx.createGain();
-  silence.gain.value=0;
+  silence.gain.value=0.0001;
   keepAlive.connect(silence);
   silence.connect(audioCtx.destination);
   keepAlive.start();
