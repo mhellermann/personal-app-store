@@ -43,22 +43,18 @@ html, body {
   padding-top: var(--safe-top);
 }
 
-/* ── Views ── */
 .view { display: none; flex: 1; overflow-y: auto; padding: 20px 16px calc(20px + var(--safe-bottom)); -webkit-overflow-scrolling: touch; }
 .view.active { display: block; }
 
-/* ── Typography ── */
 h1, h2 { font-family: var(--serif); font-weight: 400; letter-spacing: -0.02em; }
 h1 { font-size: 32px; }
 h2 { font-size: 24px; }
 
-/* ── Cards ── */
 .card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 10px; padding: 14px;
 }
 
-/* ── Buttons ── */
 .btn {
   font-family: var(--mono); font-size: 13px; border: none;
   cursor: pointer; border-radius: 6px; transition: all 0.2s;
@@ -76,8 +72,15 @@ h2 { font-size: 24px; }
 .btn-sm { padding: 5px 10px; font-size: 11px; }
 .btn-danger { color: var(--danger); }
 .btn-back { background: none; border: none; color: var(--text-muted); font-family: var(--mono); font-size: 12px; cursor: pointer; padding: 4px 0; margin-bottom: 12px; }
+.btn-big {
+  width: 100%; padding: 16px 20px; font-size: 15px; font-weight: 500;
+  background: var(--accent); color: var(--bg); border: none;
+  border-radius: 10px; cursor: pointer; font-family: var(--mono);
+  transition: all 0.2s;
+}
+.btn-big:active { transform: scale(0.97); }
+.btn-big:disabled { opacity: 0.4; cursor: default; }
 
-/* ── Inputs ── */
 textarea, input[type="text"] {
   width: 100%; font-family: var(--mono); font-size: 13px; line-height: 1.6;
   background: var(--surface); color: var(--text);
@@ -87,30 +90,15 @@ textarea, input[type="text"] {
 textarea:focus, input[type="text"]:focus { outline: none; border-color: var(--border-focus); }
 textarea::placeholder, input::placeholder { color: var(--text-dim); }
 
-/* ── Category Grid ── */
-.cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.cat-btn {
-  display: flex; align-items: center; gap: 10px;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 10px; padding: 14px; cursor: pointer;
-  font-family: var(--mono); font-size: 12px; color: var(--text);
-  transition: all 0.2s; text-align: left;
-}
-.cat-btn:active { transform: scale(0.97); }
-.cat-btn .icon { font-size: 20px; flex-shrink: 0; }
-
-/* ── Stats ── */
 .stats { display: flex; gap: 10px; margin-bottom: 24px; }
 .stat-card { flex: 1; text-align: center; padding: 12px 8px; }
 .stat-val { font-size: 22px; font-family: var(--serif); font-weight: 400; }
 .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-/* ── Prompt Display ── */
 .prompt-display { border-left: 3px solid var(--accent); }
 .prompt-text { font-size: 14px; line-height: 1.7; margin-bottom: 14px; }
 .prompt-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-/* ── Idea List ── */
 .idea-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 6px; }
 .idea-num {
   font-size: 12px; color: var(--text-dim); min-width: 22px;
@@ -120,22 +108,18 @@ textarea::placeholder, input::placeholder { color: var(--text-dim); }
 .idea-num.filled { color: var(--accent); }
 .idea-row textarea { flex: 1; resize: none; overflow: hidden; padding: 8px 12px; }
 
-/* ── Progress ── */
 .progress-bar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
 .progress-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease, background 0.3s ease; }
 .progress-label { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
-/* ── Prompt List ── */
 .prompt-item { position: relative; }
 .prompt-item-text { font-size: 13px; line-height: 1.6; padding-right: 80px; }
 .prompt-item-date { font-size: 11px; color: var(--text-dim); margin-top: 6px; }
 .prompt-item-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 4px; }
 
-/* ── History ── */
 details summary { list-style: none; cursor: pointer; }
 details summary::-webkit-details-marker { display: none; }
 .history-summary { display: flex; align-items: center; gap: 8px; }
-.history-icon { font-size: 16px; flex-shrink: 0; }
 .history-meta { font-size: 12px; color: var(--text-muted); }
 .history-prompt-preview { font-size: 13px; margin-top: 2px; line-height: 1.4; }
 .history-expand { color: var(--text-dim); font-size: 14px; margin-left: auto; flex-shrink: 0; }
@@ -143,7 +127,6 @@ details summary::-webkit-details-marker { display: none; }
 .history-body ol { padding-left: 20px; }
 .history-body li { font-size: 13px; line-height: 1.6; margin-bottom: 4px; }
 
-/* ── Modal ── */
 .modal-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.7); z-index: 100;
@@ -158,21 +141,6 @@ details summary::-webkit-details-marker { display: none; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .modal-header h3 { font-family: var(--serif); font-size: 22px; font-weight: 400; }
 
-/* ── Spinner ── */
-@keyframes spin { to { transform: rotate(360deg); } }
-.spinner {
-  display: inline-block; width: 16px; height: 16px;
-  border: 2px solid var(--border); border-top-color: var(--accent);
-  border-radius: 50%; animation: spin 0.8s linear infinite;
-}
-
-/* ── Label ── */
-.section-label {
-  font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
-  color: var(--text-dim); margin-bottom: 10px;
-}
-
-/* ── Mic Button ── */
 .mic-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .mic-btn {
   width: 44px; height: 44px; border-radius: 50%;
@@ -190,19 +158,27 @@ details summary::-webkit-details-marker { display: none; }
 @keyframes mic-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(232,107,90,0.4); } 50% { box-shadow: 0 0 0 10px rgba(232,107,90,0); } }
 .mic-hint { font-size: 11px; color: var(--text-dim); }
 
-/* ── Animations ── */
 @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 .fade-up { animation: fadeUp 0.35s ease-out both; }
 
-/* ── API Key Warning ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+
+.section-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-dim); margin-bottom: 10px;
+}
+
 .key-warning {
   background: rgba(232,107,90,0.1); border: 1px solid var(--danger);
   border-radius: 8px; padding: 12px; font-size: 12px; color: var(--danger);
   margin-bottom: 20px; line-height: 1.5;
 }
-.key-warning a { color: var(--danger); text-decoration: underline; }
 
-/* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -210,9 +186,7 @@ details summary::-webkit-details-marker { display: none; }
 </head>
 <body>
 
-<div id="app">
-  <!-- Views are rendered by JS -->
-</div>
+<div id="app"></div>
 
 <script>
 /* ==============================================================
@@ -220,35 +194,18 @@ details summary::-webkit-details-marker { display: none; }
    Uses Anthropic API key from localStorage (pas_anthropic_key)
    ============================================================== */
 
-// ── Config ────────────────────────────────────────────────────
 const STORAGE_PREFIX = 'idea_machine_';
-const CATEGORIES = [
-  { id: 'domain',   label: 'Domain Collision', icon: '⚡', color: '#E8A838' },
-  { id: 'health',   label: 'Health',           icon: '🧬', color: '#4CAF82' },
-  { id: 'wealth',   label: 'Wealth',           icon: '📈', color: '#5B8DEF' },
-  { id: 'relationships', label: 'Relationships', icon: '🤝', color: '#E86B5A' },
-  { id: 'business', label: 'My Business Edge',  icon: '🏗️', color: '#9B6EE7' },
-  { id: 'aigeneral', label: 'AI & General',     icon: '🤖', color: '#58A6FF' },
-];
 
-const PROMPT_RULES = `RULES FOR THE PROMPT YOU GENERATE:
-- Maximum 2 sentences. Brevity is critical.
-- The prompt must naturally invite a LIST of 10 distinct ideas — not a single deep analysis.
-- Start with "List 10..." or "What are 10..." or similar list-inviting framing.
-- Be concrete and specific, not abstract or philosophical.
-- Each of the 10 ideas should be answerable in 1-3 sentences.
-- Return ONLY the prompt text. No preamble, quotes, or numbering.`;
+const SYSTEM_PROMPT = `You generate short ideation prompts for a daily "10 ideas" creativity exercise.
 
-const DOMAIN_CONTEXT = `Michael's background: systematic trend-following trader, 20+ years energy trading (Enron, EDF, HETCO, eni), dual German engineering degrees (RWTH Aachen), AI power user, HIT fitness, Newport Beach CA.`;
-
-const CATEGORY_SYSTEM = {
-  domain: `${DOMAIN_CONTEXT}\n\nGenerate ONE ideation prompt that collides two or more of Michael's domains (trading, energy, German engineering, AI, health). The prompt should leverage knowledge unique to his background.\n\n${PROMPT_RULES}`,
-  health: `Generate ONE ideation prompt about health, fitness, longevity, sleep, nutrition, or wellness — from a quantified/analytical angle. Think wearable data, training protocols, recovery optimization, habit systems.\n\n${PROMPT_RULES}`,
-  wealth: `${DOMAIN_CONTEXT}\n\nGenerate ONE ideation prompt about wealth building, income streams, financial tools, or money optimization. Go beyond basic investing — think productized expertise, market inefficiencies, overlooked financial strategies.\n\n${PROMPT_RULES}`,
-  relationships: `Generate ONE ideation prompt about relationships, networking, community, mentorship, or social capital. Think high-leverage connections, knowledge sharing, community creation, or ways to deepen existing relationships.\n\n${PROMPT_RULES}`,
-  business: `${DOMAIN_CONTEXT}\n\nGenerate ONE ideation prompt about business opportunities that exploit Michael's specific combination of skills — trading systems, energy markets, risk management, AI tools, German engineering rigor. What could he build or offer that others can't?\n\n${PROMPT_RULES}`,
-  aigeneral: `Generate ONE ideation prompt about AI-powered or AI-enabled business opportunities. These should be general — NOT tied to any specific professional background. Think: problems AI can now solve that couldn't be solved before, underserved markets, new product categories, workflow automation, AI wrappers, niche tools. Be specific about the problem domain.\n\n${PROMPT_RULES}`,
-};
+RULES:
+- ONE sentence only. Maximum 15 words.
+- Must start with "List 10..." or "What are 10..."
+- Must be concrete and specific — not abstract or philosophical.
+- The prompt should invite 10 DISTINCT answers that are each 1-2 sentences.
+- Vary wildly: business ideas, products, services, life improvements, problems worth solving, things that should exist, ways to make money, creative projects, inefficiencies to fix, underserved markets.
+- Do NOT repeat themes from these recent prompts (if any are listed below).
+- Return ONLY the prompt text. No preamble, no quotes.`;
 
 // ── State ─────────────────────────────────────────────────────
 let state = {
@@ -260,7 +217,6 @@ let state = {
   currentSession: null,
   ideas: Array(10).fill(''),
   activePrompt: '',
-  activeCategory: null,
   isGenerating: false,
   genError: null,
   showPromptPicker: false,
@@ -269,7 +225,7 @@ let state = {
   newPromptText: '',
 };
 
-// ── Persistence (localStorage) ────────────────────────────────
+// ── Persistence ───────────────────────────────────────────────
 function loadState() {
   try {
     const d = JSON.parse(localStorage.getItem(STORAGE_PREFIX + 'data') || '{}');
@@ -294,23 +250,28 @@ function savePrompts() {
   localStorage.setItem(STORAGE_PREFIX + 'prompts', JSON.stringify(state.customPrompts));
 }
 
-// ── API Key ───────────────────────────────────────────────────
 function getApiKey() {
   return localStorage.getItem('pas_anthropic_key') || '';
 }
 
-// ── API Call ───────────────────────────────────────────────────
-async function generatePrompt(categoryId) {
+// ── API ───────────────────────────────────────────────────────
+async function generatePrompt() {
   const apiKey = getApiKey();
   if (!apiKey) {
     state.genError = 'No API key found. Configure it in your App Store settings.';
-    state.isGenerating = false;
     render();
     return;
   }
   state.isGenerating = true;
   state.genError = null;
   render();
+
+  // Gather recent prompts to avoid repetition
+  const recentPrompts = state.sessions.slice(0, 10).map(s => s.prompt);
+  let userMsg = 'Generate one prompt.';
+  if (recentPrompts.length > 0) {
+    userMsg += '\n\nAvoid repeating themes from these recent prompts:\n' + recentPrompts.map(p => '- ' + p).join('\n');
+  }
 
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -323,8 +284,9 @@ async function generatePrompt(categoryId) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 500,
-        messages: [{ role: 'user', content: CATEGORY_SYSTEM[categoryId] }],
+        max_tokens: 100,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userMsg }],
       }),
     });
 
@@ -337,31 +299,28 @@ async function generatePrompt(categoryId) {
     const text = data.content?.find(b => b.type === 'text')?.text?.trim();
     if (text) {
       state.activePrompt = text;
-      state.activeCategory = categoryId;
     } else {
       state.genError = 'No prompt returned. Try again.';
     }
   } catch (err) {
-    state.genError = err.message || 'API error — check connection.';
+    state.genError = err.message || 'API error.';
   }
 
   state.isGenerating = false;
   render();
 }
 
-// ── Session Logic ─────────────────────────────────────────────
-function startSession(prompt, category) {
+// ── Session ───────────────────────────────────────────────────
+function startSession(prompt) {
   state.currentSession = {
     id: Date.now().toString(),
     date: new Date().toISOString(),
     prompt,
-    category,
   };
   state.ideas = Array(10).fill('');
   state.activePrompt = prompt;
   state.view = 'session';
   render();
-  // Focus first textarea
   setTimeout(() => {
     const first = document.querySelector('.idea-row textarea');
     if (first) first.focus();
@@ -375,21 +334,17 @@ function saveSession() {
   const session = { ...state.currentSession, ideas: [...state.ideas], filledCount: filled };
   state.sessions.unshift(session);
 
-  // Streak logic
   const today = new Date().toDateString();
   const lastDate = state.sessions[1]?.date ? new Date(state.sessions[1].date).toDateString() : null;
   const yesterday = new Date(Date.now() - 86400000).toDateString();
 
-  if (lastDate === today) {
-    // already logged today
-  } else if (lastDate === yesterday) {
-    state.streak++;
-  } else {
-    state.streak = 1;
-  }
+  if (lastDate === today) { /* already logged */ }
+  else if (lastDate === yesterday) { state.streak++; }
+  else { state.streak = 1; }
   state.totalSessions++;
 
   saveData();
+  if (isRecording) stopDictation();
   state.currentSession = null;
   state.view = 'home';
   render();
@@ -427,7 +382,7 @@ function saveEditedPrompt(id) {
   render();
 }
 
-// ── Helpers ───────────────────────────────────────────────────
+// ── Dictation ─────────────────────────────────────────────────
 let recognition = null;
 let isRecording = false;
 let activeDictationIdx = 0;
@@ -435,12 +390,11 @@ let activeDictationIdx = 0;
 function toggleDictation() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
-    alert('Speech recognition is not supported in this browser. Try Chrome or Safari.');
+    alert('Speech recognition not supported. Try Chrome or Safari.');
     return;
   }
   if (isRecording) { stopDictation(); return; }
 
-  // Find first empty slot
   activeDictationIdx = state.ideas.findIndex(x => !x.trim());
   if (activeDictationIdx === -1) activeDictationIdx = 9;
 
@@ -452,48 +406,39 @@ function toggleDictation() {
   recognition.onresult = (e) => {
     let final = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) {
-        final += e.results[i][0].transcript;
-      }
+      if (e.results[i].isFinal) final += e.results[i][0].transcript;
     }
-    if (final) {
-      // Check for "next" keyword
-      const trimmed = final.trim().toLowerCase();
-      if (trimmed === 'next' || trimmed === 'next.') {
-        activeDictationIdx = state.ideas.findIndex((x, i) => i > activeDictationIdx && !x.trim());
-        if (activeDictationIdx === -1) activeDictationIdx = state.ideas.findIndex(x => !x.trim());
-        if (activeDictationIdx === -1) activeDictationIdx = 9;
-        const hint = document.getElementById('mic-hint');
-        if (hint) hint.textContent = `Listening… idea ${activeDictationIdx + 1}`;
-        return;
-      }
+    if (!final) return;
 
-      let idx = activeDictationIdx;
-      state.ideas[idx] = (state.ideas[idx] + ' ' + final).trim();
-
-      // Update the textarea directly without full re-render
-      const ta = document.querySelector(`[data-idea="${idx}"]`);
-      if (ta) {
-        ta.value = state.ideas[idx];
-        ta.style.height = 'auto';
-        ta.style.height = ta.scrollHeight + 'px';
-        const num = ta.closest('.idea-row').querySelector('.idea-num');
-        if (num) num.className = 'idea-num filled';
-      }
-      // Update progress
-      const filled = filledCount();
-      const bar = document.querySelector('.progress-fill');
-      const label = document.querySelector('.progress-label');
-      if (bar) { bar.style.width = (filled/10)*100+'%'; bar.style.background = filled===10?'var(--success)':'var(--accent)'; }
-      if (label) { label.textContent = filled+'/10'; label.style.color = filled===10?'var(--success)':'var(--text-muted)'; }
-
-      // Auto-advance to next empty slot
-      const nextEmpty = state.ideas.findIndex((x, i) => i > idx && !x.trim());
-      if (nextEmpty !== -1) activeDictationIdx = nextEmpty;
-
+    const trimmed = final.trim().toLowerCase();
+    if (trimmed === 'next' || trimmed === 'next.') {
+      activeDictationIdx = state.ideas.findIndex((x, i) => i > activeDictationIdx && !x.trim());
+      if (activeDictationIdx === -1) activeDictationIdx = state.ideas.findIndex(x => !x.trim());
+      if (activeDictationIdx === -1) activeDictationIdx = 9;
       const hint = document.getElementById('mic-hint');
-      if (hint) hint.textContent = `Listening… idea ${activeDictationIdx + 1}`;
+      if (hint) hint.textContent = 'Listening… idea ' + (activeDictationIdx + 1);
+      return;
     }
+
+    let idx = activeDictationIdx;
+    state.ideas[idx] = (state.ideas[idx] + ' ' + final).trim();
+
+    const ta = document.querySelector('[data-idea="' + idx + '"]');
+    if (ta) {
+      ta.value = state.ideas[idx];
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
+      const num = ta.closest('.idea-row').querySelector('.idea-num');
+      if (num) num.className = 'idea-num filled';
+    }
+
+    updateProgress();
+
+    const nextEmpty = state.ideas.findIndex((x, i) => i > idx && !x.trim());
+    if (nextEmpty !== -1) activeDictationIdx = nextEmpty;
+
+    const hint = document.getElementById('mic-hint');
+    if (hint) hint.textContent = 'Listening… idea ' + (activeDictationIdx + 1);
   };
 
   recognition.onerror = () => stopDictation();
@@ -508,7 +453,7 @@ function toggleDictation() {
   const btn = document.getElementById('mic-btn');
   if (btn) btn.classList.add('recording');
   const hint = document.getElementById('mic-hint');
-  if (hint) hint.textContent = `Listening… idea ${activeDictationIdx + 1}`;
+  if (hint) hint.textContent = 'Listening… idea ' + (activeDictationIdx + 1);
 }
 
 function stopDictation() {
@@ -520,96 +465,84 @@ function stopDictation() {
   if (hint) hint.textContent = 'Tap to dictate · say "next" to advance';
 }
 
-function getCat(id) { return CATEGORIES.find(c => c.id === id) || { icon: '📝', label: 'Custom', color: '#8B9DAF' }; }
+// ── Helpers ───────────────────────────────────────────────────
 function filledCount() { return state.ideas.filter(i => i.trim()).length; }
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function updateProgress() {
+  const filled = filledCount();
+  const bar = document.querySelector('.progress-fill');
+  const label = document.querySelector('.progress-label');
+  if (bar) { bar.style.width = (filled/10)*100+'%'; bar.style.background = filled===10?'var(--success)':'var(--accent)'; }
+  if (label) { label.textContent = filled+'/10'; label.style.color = filled===10?'var(--success)':'var(--text-muted)'; }
+  const saveBtn = document.querySelector('[data-action="save"]');
+  if (saveBtn) {
+    saveBtn.disabled = filled === 0;
+    saveBtn.className = 'btn ' + (filled===10?'btn-success':'btn-primary');
+    saveBtn.style.flex = '1';
+    saveBtn.textContent = filled===10 ? '✓ Save Complete Session' : 'Save (' + filled + '/10)';
+  }
+}
 
 // ── Render ────────────────────────────────────────────────────
 function render() {
   const app = document.getElementById('app');
-  const views = {
-    home: renderHome,
-    session: renderSession,
-    prompts: renderPrompts,
-    history: renderHistory,
-  };
-  app.innerHTML = `<div class="view active">${(views[state.view] || renderHome)()}</div>`;
+  const views = { home: renderHome, session: renderSession, prompts: renderPrompts, history: renderHistory };
+  app.innerHTML = '<div class="view active">' + (views[state.view] || renderHome)() + '</div>';
   bindEvents();
 }
 
 function renderHome() {
   const hasKey = !!getApiKey();
-  const cat = state.activeCategory ? getCat(state.activeCategory) : null;
 
   return `
-    ${!hasKey ? `<div class="key-warning fade-up">
-      No Anthropic API key found. Go to your <a href="../" onclick="return false">App Store</a> settings (gear icon) and enter your key.
-    </div>` : ''}
+    ${!hasKey ? '<div class="key-warning fade-up">No Anthropic API key found. Go to your App Store settings and enter your key.</div>' : ''}
 
     <div class="fade-up" style="margin-bottom:28px">
-     <div onclick="window.location.href='/personal-app-store/'" style="font-size:12px;color:var(--text-muted);cursor:pointer;margin-bottom:8px">← Back</div>
+      <div onclick="window.location.href='/personal-app-store/'" style="font-size:12px;color:var(--text-muted);cursor:pointer;margin-bottom:8px">← Back</div>
       <h1>Idea Machine</h1>
       <p style="color:var(--text-muted);font-size:13px;margin-top:6px">
-        API-powered prompts × your domain intersections
+        Exercise the idea muscle. 10 ideas a day.
       </p>
     </div>
 
     <div class="stats fade-up">
-      ${[
-        { label: 'Streak', value: state.streak + 'd', color: 'var(--accent)' },
-        { label: 'Sessions', value: state.totalSessions, color: 'var(--text)' },
-        { label: 'Custom', value: state.customPrompts.length, color: 'var(--text-muted)' },
-      ].map(s => `
-        <div class="card stat-card">
-          <div class="stat-val" style="color:${s.color}">${s.value}</div>
-          <div class="stat-label">${s.label}</div>
-        </div>
-      `).join('')}
-    </div>
-
-    <div class="fade-up" style="margin-bottom:10px">
-      <div class="section-label">Generate a prompt</div>
-      <div class="cat-grid">
-        ${CATEGORIES.map(c => `
-          <button class="cat-btn" data-gen="${c.id}" ${state.isGenerating ? 'disabled' : ''}
-            style="opacity:${state.isGenerating ? 0.5 : 1};
-              ${state.activeCategory === c.id ? `border-color:${c.color};background:${c.color}11` : ''}">
-            <span class="icon">${c.icon}</span>
-            <span>${c.label}</span>
-          </button>
-        `).join('')}
+      <div class="card stat-card">
+        <div class="stat-val" style="color:var(--accent)">${state.streak}d</div>
+        <div class="stat-label">Streak</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-val">${state.totalSessions}</div>
+        <div class="stat-label">Sessions</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-val" style="color:var(--text-muted)">${state.customPrompts.length}</div>
+        <div class="stat-label">Custom</div>
       </div>
     </div>
 
+    <div class="fade-up" style="margin-bottom:16px">
+      <button class="btn-big" data-action="generate" ${state.isGenerating ? 'disabled' : ''}>
+        ${state.isGenerating ? '⟳ Generating...' : '⚡ Generate Prompt'}
+      </button>
+    </div>
+
     <div class="fade-up" style="margin-bottom:20px">
-      <button class="cat-btn" data-action="pick-custom" style="width:100%">
-        <span class="icon">✍️</span>
-        <span>Use Custom Prompt</span>
+      <button class="btn btn-ghost" data-action="pick-custom" style="width:100%;justify-content:center">
+        ✍️ Use Custom Prompt
         <span style="margin-left:auto;font-size:11px;color:var(--text-dim)">${state.customPrompts.length} saved</span>
       </button>
     </div>
 
-    ${state.isGenerating ? `
-      <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">
-        <div class="spinner" style="margin-bottom:8px"></div>
-        <div>Generating prompt...</div>
-      </div>
-    ` : ''}
-
-    ${state.genError ? `
-      <div class="card fade-up" style="border-color:var(--danger);color:var(--danger);font-size:12px;margin-bottom:16px">
-        ${esc(state.genError)}
-      </div>
-    ` : ''}
+    ${state.genError ? '<div class="card fade-up" style="border-color:var(--danger);color:var(--danger);font-size:12px;margin-bottom:16px">' + esc(state.genError) + '</div>' : ''}
 
     ${state.activePrompt && !state.isGenerating ? `
       <div class="fade-up" style="margin-bottom:20px">
-        <div class="section-label">Your prompt</div>
-        <div class="card prompt-display" style="border-left-color:${cat?.color || 'var(--accent)'}">
+        <div class="card prompt-display">
           <p class="prompt-text">${esc(state.activePrompt)}</p>
           <div class="prompt-actions">
             <button class="btn btn-primary" data-action="start">Start →</button>
-            ${state.activeCategory !== 'custom' ? `<button class="btn btn-ghost" data-action="reroll">↻ Reroll</button>` : ''}
+            <button class="btn btn-ghost" data-action="generate">↻ Reroll</button>
           </div>
         </div>
       </div>
@@ -653,13 +586,11 @@ function renderPromptPicker() {
 
 function renderSession() {
   const filled = filledCount();
-  const cat = getCat(state.activeCategory);
 
   return `
     <button class="btn-back" data-nav="home">← Back</button>
 
-    <div class="card prompt-display fade-up" style="border-left-color:${cat.color};margin-bottom:16px">
-      <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">${cat.label}</div>
+    <div class="card prompt-display fade-up" style="margin-bottom:16px">
       <p style="font-size:14px;line-height:1.7">${esc(state.activePrompt)}</p>
     </div>
 
@@ -687,7 +618,7 @@ function renderSession() {
 
     <div style="margin-top:16px;display:flex;gap:8px">
       <button class="btn ${filled===10?'btn-success':'btn-primary'}" style="flex:1" data-action="save" ${filled===0?'disabled':''}>
-        ${filled===10 ? '✓ Save Complete Session' : `Save (${filled}/10)`}
+        ${filled===10 ? '✓ Save Complete Session' : 'Save (' + filled + '/10)'}
       </button>
     </div>
   `;
@@ -755,12 +686,10 @@ function renderHistory() {
     ` : `
       <div style="display:flex;flex-direction:column;gap:10px">
         ${state.sessions.map(s => {
-          const cat = getCat(s.category);
           const count = s.filledCount || s.ideas.filter(x => x.trim()).length;
           return `
             <details class="card fade-up">
               <summary class="history-summary">
-                <span class="history-icon">${cat.icon}</span>
                 <div style="flex:1;min-width:0">
                   <div class="history-meta">${new Date(s.date).toLocaleDateString()} · ${count}/10</div>
                   <div class="history-prompt-preview">${esc(s.prompt.slice(0,80))}${s.prompt.length>80?'…':''}</div>
@@ -770,7 +699,7 @@ function renderHistory() {
               <div class="history-body">
                 <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${esc(s.prompt)}</div>
                 <ol>
-                  ${s.ideas.filter(x=>x.trim()).map(idea => `<li>${esc(idea)}</li>`).join('')}
+                  ${s.ideas.filter(x=>x.trim()).map(idea => '<li>' + esc(idea) + '</li>').join('')}
                 </ol>
               </div>
             </details>
@@ -783,7 +712,6 @@ function renderHistory() {
 
 // ── Event Binding ─────────────────────────────────────────────
 function bindEvents() {
-  // Navigation
   document.querySelectorAll('[data-nav]').forEach(el => {
     el.addEventListener('click', () => {
       if (isRecording) stopDictation();
@@ -792,18 +720,11 @@ function bindEvents() {
     });
   });
 
-  // Generate prompt
-  document.querySelectorAll('[data-gen]').forEach(el => {
-    el.addEventListener('click', () => generatePrompt(el.dataset.gen));
-  });
-
-  // Actions
   document.querySelectorAll('[data-action]').forEach(el => {
     el.addEventListener('click', (e) => {
       const action = el.dataset.action;
-
-      if (action === 'start') startSession(state.activePrompt, state.activeCategory);
-      else if (action === 'reroll' && state.activeCategory) generatePrompt(state.activeCategory);
+      if (action === 'generate') generatePrompt();
+      else if (action === 'start') startSession(state.activePrompt);
       else if (action === 'save') saveSession();
       else if (action === 'pick-custom') { state.showPromptPicker = true; render(); }
       else if (action === 'close-picker') { state.showPromptPicker = false; render(); }
@@ -817,29 +738,29 @@ function bindEvents() {
       else if (action === 'delete-prompt') deletePrompt(el.dataset.id);
       else if (action === 'use-prompt-direct') {
         const p = state.customPrompts.find(p => p.id === el.dataset.id);
-        if (p) { state.activePrompt = p.text; state.activeCategory = 'custom'; state.view = 'home'; render(); }
+        if (p) { state.activePrompt = p.text; state.view = 'home'; render(); }
       }
     });
   });
 
-  // Use custom prompt from picker
   document.querySelectorAll('[data-use-prompt]').forEach(el => {
     el.addEventListener('click', () => {
       const p = state.customPrompts.find(p => p.id === el.dataset.usePrompt);
       if (p) {
         state.activePrompt = p.text;
-        state.activeCategory = 'custom';
         state.showPromptPicker = false;
         render();
       }
     });
   });
 
+  // Mic
+  const micBtn = document.getElementById('mic-btn');
+  if (micBtn) micBtn.addEventListener('click', toggleDictation);
+
   // Idea textareas
   document.querySelectorAll('[data-idea]').forEach(el => {
     const idx = parseInt(el.dataset.idea);
-
-    // Auto-resize
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
 
@@ -847,40 +768,21 @@ function bindEvents() {
       state.ideas[idx] = el.value;
       el.style.height = 'auto';
       el.style.height = el.scrollHeight + 'px';
-      // Update progress + save button without full re-render
-      const filled = filledCount();
-      const bar = document.querySelector('.progress-fill');
-      const label = document.querySelector('.progress-label');
       const num = el.closest('.idea-row').querySelector('.idea-num');
-      if (bar) { bar.style.width = (filled/10)*100+'%'; bar.style.background = filled===10?'var(--success)':'var(--accent)'; }
-      if (label) { label.textContent = filled+'/10'; label.style.color = filled===10?'var(--success)':'var(--text-muted)'; }
-      if (num) { num.className = 'idea-num' + (el.value.trim() ? ' filled' : ''); }
-      const saveBtn = document.querySelector('[data-action="save"]');
-      if (saveBtn) {
-        saveBtn.disabled = filled === 0;
-        saveBtn.className = 'btn ' + (filled===10?'btn-success':'btn-primary');
-        saveBtn.style.flex = '1';
-        saveBtn.textContent = filled===10 ? '✓ Save Complete Session' : `Save (${filled}/10)`;
-      }
+      if (num) num.className = 'idea-num' + (el.value.trim() ? ' filled' : '');
+      updateProgress();
     });
 
     el.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey && idx < 9) {
         e.preventDefault();
-        const next = document.querySelector(`[data-idea="${idx+1}"]`);
+        const next = document.querySelector('[data-idea="' + (idx+1) + '"]');
         if (next) next.focus();
       }
     });
   });
 
-  // New prompt input
   const newInput = document.getElementById('new-prompt-input');
-
-  // Mic button
-  const micBtn = document.getElementById('mic-btn');
-  if (micBtn) {
-    micBtn.addEventListener('click', toggleDictation);
-  }
   if (newInput) {
     newInput.addEventListener('input', () => {
       state.newPromptText = newInput.value;
@@ -889,7 +791,6 @@ function bindEvents() {
     });
   }
 
-  // Edit prompt input
   const editInput = document.getElementById('edit-prompt-input');
   if (editInput) {
     editInput.addEventListener('input', () => {
