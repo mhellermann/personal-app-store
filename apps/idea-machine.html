@@ -204,7 +204,7 @@ RULES:
 - Must be concrete and specific — not abstract or philosophical.
 - The prompt should invite 10 DISTINCT answers that are each 1-2 sentences.
 - Vary wildly: business ideas, products, services, life improvements, problems worth solving, things that should exist, ways to make money, creative projects, inefficiencies to fix, underserved markets.
-- Do NOT repeat themes from these recent prompts (if any are listed below).
+- You MUST pick a completely different topic/domain than any prompt listed under "AVOID THESE".
 - Return ONLY the prompt text. No preamble, no quotes.`;
 
 // ── State ─────────────────────────────────────────────────────
@@ -224,6 +224,9 @@ let state = {
   editingPromptText: '',
   newPromptText: '',
 };
+
+// Rejected prompts this browsing session (not persisted)
+let rejectedPrompts = [];
 
 // ── Persistence ───────────────────────────────────────────────
 function loadState() {
@@ -262,15 +265,23 @@ async function generatePrompt() {
     render();
     return;
   }
+
+  // If there's a current prompt showing, add it to rejected list before generating new one
+  if (state.activePrompt) {
+    rejectedPrompts.push(state.activePrompt);
+  }
+
   state.isGenerating = true;
   state.genError = null;
   render();
 
-  // Gather recent prompts to avoid repetition
-  const recentPrompts = state.sessions.slice(0, 10).map(s => s.prompt);
+  // Build avoid list: rejected prompts this session + last 10 saved sessions
+  const savedPrompts = state.sessions.slice(0, 10).map(s => s.prompt);
+  const allAvoid = [...rejectedPrompts, ...savedPrompts];
+
   let userMsg = 'Generate one prompt.';
-  if (recentPrompts.length > 0) {
-    userMsg += '\n\nAvoid repeating themes from these recent prompts:\n' + recentPrompts.map(p => '- ' + p).join('\n');
+  if (allAvoid.length > 0) {
+    userMsg += '\n\nAVOID THESE (pick a completely different topic):\n' + allAvoid.map(p => '- ' + p).join('\n');
   }
 
   try {
@@ -312,6 +323,8 @@ async function generatePrompt() {
 
 // ── Session ───────────────────────────────────────────────────
 function startSession(prompt) {
+  // Clear rejected prompts when starting a session
+  rejectedPrompts = [];
   state.currentSession = {
     id: Date.now().toString(),
     date: new Date().toISOString(),
