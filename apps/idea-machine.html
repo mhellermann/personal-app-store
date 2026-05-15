@@ -217,6 +217,7 @@ let state = {
   currentSession: null,
   ideas: Array(10).fill(''),
   activePrompt: '',
+  activeCustomPromptId: null,
   isGenerating: false,
   genError: null,
   showPromptPicker: false,
@@ -271,6 +272,9 @@ async function generatePrompt() {
     rejectedPrompts.push(state.activePrompt);
   }
 
+  // Clear custom prompt tracking since we're generating an API prompt
+  state.activeCustomPromptId = null;
+
   state.isGenerating = true;
   state.genError = null;
   render();
@@ -323,7 +327,13 @@ async function generatePrompt() {
 
 // ── Session ───────────────────────────────────────────────────
 function startSession(prompt) {
-  // Clear rejected prompts when starting a session
+  // If this was a custom prompt, remove it from the list
+  if (state.activeCustomPromptId) {
+    state.customPrompts = state.customPrompts.filter(p => p.id !== state.activeCustomPromptId);
+    savePrompts();
+    state.activeCustomPromptId = null;
+  }
+
   rejectedPrompts = [];
   state.currentSession = {
     id: Date.now().toString(),
@@ -751,7 +761,7 @@ function bindEvents() {
       else if (action === 'delete-prompt') deletePrompt(el.dataset.id);
       else if (action === 'use-prompt-direct') {
         const p = state.customPrompts.find(p => p.id === el.dataset.id);
-        if (p) { state.activePrompt = p.text; state.view = 'home'; render(); }
+        if (p) { state.activePrompt = p.text; state.activeCustomPromptId = p.id; state.view = 'home'; render(); }
       }
     });
   });
@@ -761,6 +771,7 @@ function bindEvents() {
       const p = state.customPrompts.find(p => p.id === el.dataset.usePrompt);
       if (p) {
         state.activePrompt = p.text;
+        state.activeCustomPromptId = p.id;
         state.showPromptPicker = false;
         render();
       }
