@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0e10">
+<title>Rewards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0e10;
+    --surface:#16181c;
+    --surface-2:#1d2025;
+    --line:#2a2e35;
+    --line-soft:#21242a;
+    --txt:#e9eaec;
+    --txt-dim:#9aa0aa;
+    --txt-faint:#646b76;
+    --gold:#e6b24c;
+    --gold-soft:rgba(230,178,76,.13);
+    --green:#5fcf80;
+    --green-soft:rgba(95,207,128,.13);
+    --amber:#e8a13c;
+    --red:#e8685f;
+    --red-soft:rgba(232,104,95,.13);
+    --display:'Bricolage Grotesque',sans-serif;
+    --body:'IBM Plex Sans',sans-serif;
+    --mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{background:var(--bg);color:var(--txt);font-family:var(--body);-webkit-font-smoothing:antialiased;}
+  body{
+    min-height:100vh;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    background-image:radial-gradient(ellipse 120% 60% at 50% -10%, rgba(230,178,76,.06), transparent 70%);
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:18px 18px 60px;}
+
+  /* Header */
+  header{display:flex;align-items:center;gap:14px;padding:6px 2px 18px;}
+  .back{
+    width:38px;height:38px;flex:none;border:1px solid var(--line);border-radius:11px;
+    background:var(--surface);color:var(--txt-dim);font-size:18px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:.18s;
+  }
+  .back:active{transform:scale(.93);}
+  .back:hover{border-color:var(--gold);color:var(--gold);}
+  .title h1{font-family:var(--display);font-weight:800;font-size:25px;letter-spacing:-.02em;line-height:1;}
+  .title p{font-size:11.5px;color:var(--txt-faint);margin-top:5px;letter-spacing:.04em;text-transform:uppercase;font-family:var(--mono);}
+
+  /* Tabs */
+  .tabs{display:flex;gap:5px;background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:5px;margin-bottom:20px;overflow-x:auto;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:1 0 auto;border:none;background:transparent;color:var(--txt-faint);
+    font-family:var(--body);font-size:12.5px;font-weight:600;padding:9px 13px;border-radius:10px;
+    cursor:pointer;transition:.16s;white-space:nowrap;letter-spacing:.01em;
+  }
+  .tab.active{background:var(--surface-2);color:var(--txt);box-shadow:0 1px 0 rgba(255,255,255,.03) inset;}
+  .tab:not(.active):active{color:var(--txt-dim);}
+
+  .panel{display:none;animation:rise .32s cubic-bezier(.2,.7,.3,1);}
+  .panel.active{display:block;}
+  @keyframes rise{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+  /* Cards */
+  .card{background:var(--surface);border:1px solid var(--line-soft);border-radius:18px;padding:20px;margin-bottom:16px;}
+  .card h2{font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:-.01em;margin-bottom:3px;}
+  .card .sub{font-size:12px;color:var(--txt-faint);margin-bottom:18px;line-height:1.5;}
+
+  /* Inputs */
+  .field{margin-bottom:15px;}
+  .field label{display:block;font-size:12px;color:var(--txt-dim);margin-bottom:7px;font-weight:500;}
+  .field label .hint{color:var(--txt-faint);font-weight:400;}
+  .input-shell{position:relative;display:flex;align-items:center;}
+  .input-shell .pre{position:absolute;left:14px;color:var(--txt-faint);font-family:var(--mono);font-size:14px;pointer-events:none;}
+  .field input{
+    width:100%;background:var(--bg);border:1px solid var(--line);border-radius:11px;
+    color:var(--txt);font-family:var(--mono);font-size:16px;font-weight:500;
+    padding:13px 14px;transition:.16s;outline:none;
+  }
+  .field input.has-pre{padding-left:28px;}
+  .field input:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-soft);}
+  .field input::placeholder{color:var(--txt-faint);font-weight:400;}
+
+  /* Result block */
+  .result{
+    margin-top:4px;border-radius:15px;padding:20px;text-align:center;
+    background:var(--surface-2);border:1px solid var(--line);transition:.25s;
+  }
+  .result .cpp{font-family:var(--mono);font-weight:600;font-size:42px;line-height:1;letter-spacing:-.02em;}
+  .result .cpp .unit{font-size:16px;color:var(--txt-dim);font-weight:400;margin-left:4px;}
+  .result .verdict{font-family:var(--display);font-weight:700;font-size:17px;margin-top:12px;letter-spacing:-.01em;}
+  .result .note{font-size:12.5px;color:var(--txt-dim);margin-top:8px;line-height:1.5;max-width:380px;margin-left:auto;margin-right:auto;}
+  .result.empty .cpp{color:var(--txt-faint);}
+  .result.empty .verdict{color:var(--txt-faint);}
+  .result.good{border-color:rgba(95,207,128,.4);background:linear-gradient(180deg,var(--green-soft),var(--surface-2));}
+  .result.good .cpp,.result.good .verdict{color:var(--green);}
+  .result.mid{border-color:rgba(230,178,76,.4);background:linear-gradient(180deg,var(--gold-soft),var(--surface-2));}
+  .result.mid .cpp,.result.mid .verdict{color:var(--gold);}
+  .result.bad{border-color:rgba(232,104,95,.4);background:linear-gradient(180deg,var(--red-soft),var(--surface-2));}
+  .result.bad .cpp,.result.bad .verdict{color:var(--red);}
+
+  /* Floor control */
+  .floor{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding:12px 14px;background:var(--bg);border:1px solid var(--line-soft);border-radius:11px;}
+  .floor label{font-size:12px;color:var(--txt-dim);}
+  .floor .ctrl{display:flex;align-items:center;gap:10px;}
+  .floor button{width:30px;height:30px;border:1px solid var(--line);background:var(--surface);color:var(--txt-dim);border-radius:8px;font-size:16px;cursor:pointer;font-family:var(--mono);}
+  .floor button:active{transform:scale(.9);}
+  .floor .fval{font-family:var(--mono);font-size:15px;color:var(--gold);min-width:62px;text-align:center;}
+
+  /* Scale / benchmark */
+  .scale-row{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--line-soft);}
+  .scale-row:last-child{border-bottom:none;}
+  .scale-band{flex:none;width:78px;font-family:var(--mono);font-size:13px;font-weight:600;padding-top:1px;}
+  .scale-body strong{display:block;font-size:13.5px;font-weight:600;margin-bottom:3px;font-family:var(--display);letter-spacing:-.01em;}
+  .scale-body span{font-size:12px;color:var(--txt-dim);line-height:1.5;}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle;}
+
+  .baseline{display:flex;gap:10px;margin-top:4px;}
+  .bl-item{flex:1;background:var(--bg);border:1px solid var(--line-soft);border-radius:12px;padding:13px 12px;text-align:center;}
+  .bl-item .n{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--gold);}
+  .bl-item .l{font-size:11px;color:var(--txt-dim);margin-top:4px;}
+
+  /* Door map */
+  .door{padding:15px 0;border-bottom:1px solid var(--line-soft);}
+  .door:last-child{border-bottom:none;}
+  .door-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+  .door-head .name{font-family:var(--display);font-weight:700;font-size:15px;}
+  .alliance{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-faint);border:1px solid var(--line);border-radius:6px;padding:3px 7px;}
+  .route{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:7px;flex-wrap:wrap;}
+  .cur{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--surface-2);border:1px solid var(--line);}
+  .arrow{color:var(--txt-faint);font-size:12px;}
+  .prog{font-size:13px;color:var(--txt);}
+  .flag{font-size:11px;font-family:var(--mono);padding:2px 7px;border-radius:5px;margin-left:2px;}
+  .flag.clean{background:var(--green-soft);color:var(--green);}
+  .flag.heavy{background:var(--red-soft);color:var(--red);}
+  .flag.warn{background:var(--gold-soft);color:var(--gold);}
+  .door .nope{font-size:12px;color:var(--txt-faint);font-style:italic;}
+
+  /* Checklist */
+  .step{display:flex;gap:13px;align-items:flex-start;padding:14px;background:var(--bg);border:1px solid var(--line-soft);border-radius:13px;margin-bottom:10px;cursor:pointer;transition:.16s;}
+  .step:active{transform:scale(.99);}
+  .step.done{opacity:.5;}
+  .check{flex:none;width:24px;height:24px;border:1.5px solid var(--line);border-radius:7px;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:.16s;}
+  .step.done .check{background:var(--green);border-color:var(--green);}
+  .check svg{width:13px;height:13px;opacity:0;transition:.16s;}
+  .step.done .check svg{opacity:1;}
+  .step-txt strong{display:block;font-size:13.5px;font-weight:600;margin-bottom:3px;}
+  .step.done .step-txt strong{text-decoration:line-through;}
+  .step-txt span{font-size:12px;color:var(--txt-dim);line-height:1.5;}
+  .step-txt .crit{color:var(--red);font-weight:600;}
+  .reset{width:100%;margin-top:6px;padding:12px;background:transparent;border:1px solid var(--line);border-radius:11px;color:var(--txt-dim);font-family:var(--body);font-size:13px;cursor:pointer;transition:.16s;}
+  .reset:hover{border-color:var(--gold);color:var(--gold);}
+
+  .footnote{font-size:11px;color:var(--txt-faint);line-height:1.6;margin-top:6px;padding:0 4px;}
+  .footnote b{color:var(--txt-dim);font-weight:600;}
+
+  /* Region chips */
+  .regions{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+  .regions::-webkit-scrollbar{display:none;}
+  .rchip{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--txt-dim);font-family:var(--body);font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:999px;cursor:pointer;transition:.16s;white-space:nowrap;}
+  .rchip.active{background:var(--gold);border-color:var(--gold);color:#13140f;}
+  .rchip:not(.active):active{transform:scale(.95);}
+
+  /* Sweet spot rows */
+  .spot{padding:14px 0;border-bottom:1px solid var(--line-soft);}
+  .spot:last-child{border-bottom:none;}
+  .spot-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .spot-head .name{font-family:var(--display);font-weight:700;font-size:14.5px;line-height:1.25;}
+  .miles{flex:none;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--gold);}
+  .spot .note{font-size:12px;color:var(--txt-dim);line-height:1.5;margin-top:7px;}
+  .spot .note.warnote{color:var(--gold);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <button class="back" onclick="window.location.href='/personal-app-store/'" aria-label="Back">‹</button>
+    <div class="title">
+      <h1>Rewards</h1>
+      <p>Redemption value &middot; decision tool</p>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="flight">Flight</button>
+    <button class="tab" data-tab="other">Other</button>
+    <button class="tab" data-tab="scale">Scale</button>
+    <button class="tab" data-tab="doors">Doors</button>
+    <button class="tab" data-tab="steps">Steps</button>
+  </div>
+
+  <!-- FLIGHT CALCULATOR -->
+  <section class="panel active" id="flight">
+    <div class="card">
+      <h2>Award flight value</h2>
+      <p class="sub">All-in value per point: <span style="font-family:var(--mono)">(cash fare &minus; award taxes &amp; surcharges) &divide; points</span>. This counts the cash you still pay on the award, which is what makes a surcharge-heavy door look worse than a clean one.</p>
+
+      <div class="field">
+        <label>Points / miles required</label>
+        <div class="input-shell"><input type="number" inputmode="numeric" id="f_miles" placeholder="e.g. 70000"></div>
+      </div>
+      <div class="field">
+        <label>Award taxes &amp; surcharges <span class="hint">(cash you still pay)</span></label>
+        <div class="input-shell"><span class="pre">$</span><input class="has-pre" type="number" inputmode="decimal" id="f_fees" placeholder="e.g. 120"></div>
+      </div>
+      <div class="field">
+        <label>Cash price of the same ticket</label>
+        <div class="input-shell"><span class="pre">$</span><input class="has-pre" type="number" inputmode="decimal" id="f_cash" placeholder="e.g. 4200"></div>
+      </div>
+
+      <div class="result empty" id="f_result">
+        <div class="cpp" id="f_cpp">&mdash;<span class="unit">cpp</span></div>
+        <div class="verdict" id="f_verdict">Enter the numbers</div>
+        <div class="note" id="f_note">Cents of value per point redeemed.</div>
+      </div>
+
+      <div class="floor">
+        <label>Your walk-away floor</label>
+        <div class="ctrl">
+          <button onclick="adjFloor(-0.25)">&minus;</button>
+          <span class="fval" id="floorVal">1.50 cpp</span>
+          <button onclick="adjFloor(0.25)">+</button>
+        </div>
+      </div>
+    </div>
+    <p class="footnote"><b>Reminder:</b> for international business class you should comfortably clear 2&ndash;4+ cpp. If a redemption only matches your floor, the cash fare plus keeping the points is usually the better move.</p>
+  </section>
+
+  <!-- OTHER CALCULATOR -->
+  <section class="panel" id="other">
+    <div class="card">
+      <h2>Non-flight redemption</h2>
+      <p class="sub">Gift cards, statement credit, cash, hotel transfers, portal bookings. Value per point is simply <span style="font-family:var(--mono)">value received &divide; points</span>. The bar here is the ~1 cpp cash floor &mdash; anything below it is strictly worse than just taking the cash.</p>
+
+      <div class="field">
+        <label>Points used</label>
+        <div class="input-shell"><input type="number" inputmode="numeric" id="o_pts" placeholder="e.g. 25000"></div>
+      </div>
+      <div class="field">
+        <label>Value received <span class="hint">(gift-card face, cash, hotel cash rate avoided)</span></label>
+        <div class="input-shell"><span class="pre">$</span><input class="has-pre" type="number" inputmode="decimal" id="o_val" placeholder="e.g. 250"></div>
+      </div>
+
+      <div class="result empty" id="o_result">
+        <div class="cpp" id="o_cpp">&mdash;<span class="unit">cpp</span></div>
+        <div class="verdict" id="o_verdict">Enter the numbers</div>
+        <div class="note" id="o_note">Compared against the ~1 cpp cash baseline.</div>
+      </div>
+    </div>
+    <p class="footnote"><b>Rule of thumb:</b> cash, statement credit, gift cards and the travel portal all cluster near 1 cpp. Hotel transfers usually net ~0.5&ndash;1 cpp. None of these is a "win" &mdash; they're the floor your flight redemptions need to beat.</p>
+  </section>
+
+  <!-- SCALE -->
+  <section class="panel" id="scale">
+    <div class="card">
+      <h2>What counts as good</h2>
+      <p class="sub">A rough quality scale for cents-per-point on a redemption. 1 cpp is the floor you can always get in cash, so it's the number to beat &mdash; not a target.</p>
+      <div class="scale-row">
+        <div class="scale-band" style="color:var(--green)">4.0+</div>
+        <div class="scale-body"><strong><span class="dot" style="background:var(--green)"></span>Exceptional</strong><span>Premium long-haul sweet spots &mdash; first/business on the right partner. The reason the hobby exists.</span></div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-band" style="color:var(--green)">2.0&ndash;4.0</div>
+        <div class="scale-body"><strong><span class="dot" style="background:var(--green)"></span>Strong &mdash; book it</strong><span>Solid international business class. Clear win over cash. This is your normal target.</span></div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-band" style="color:var(--gold)">1.5&ndash;2.0</div>
+        <div class="scale-body"><strong><span class="dot" style="background:var(--gold)"></span>Decent</strong><span>Worth it, but not a steal. Fine if it's the trip you actually want.</span></div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-band" style="color:var(--amber)">1.0&ndash;1.5</div>
+        <div class="scale-body"><strong><span class="dot" style="background:var(--amber)"></span>Marginal</strong><span>Economy territory. Compare hard against paying cash; often the cash is smarter.</span></div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-band" style="color:var(--red)">&lt;1.0</div>
+        <div class="scale-body"><strong><span class="dot" style="background:var(--red)"></span>Take the cash</strong><span>Below what you'd get redeeming for cash. Don't burn points here.</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Rough baseline value</h2>
+      <p class="sub">Directional "default" worth of each currency in your stack &mdash; useful as a sanity check, not a precise figure. The whole game is beating these through good flight redemptions.</p>
+      <div class="baseline">
+        <div class="bl-item"><div class="n">~2.0&cent;</div><div class="l">Amex MR</div></div>
+        <div class="bl-item"><div class="n">~1.7&cent;</div><div class="l">Citi TYP</div></div>
+        <div class="bl-item"><div class="n">~1.4&cent;</div><div class="l">Alaska</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOORS -->
+  <section class="panel" id="doors">
+    <div class="regions" id="regionChips">
+      <button class="rchip active" data-r="world">Worldwide</button>
+      <button class="rchip" data-r="na">N. America</button>
+      <button class="rchip" data-r="eu">Europe</button>
+      <button class="rchip" data-r="ap">Asia-Pacific</button>
+      <button class="rchip" data-r="mea">Mideast &amp; Africa</button>
+      <button class="rchip" data-r="latam">Latin Am.</button>
+    </div>
+
+    <div class="card">
+      <h2 id="ssTitle">Best premium redemptions</h2>
+      <p class="sub" id="ssSub">Mileage figures are approximate one-way saver rates &mdash; the door is stable, the price isn't. Always confirm live in your search tool before transferring.</p>
+      <div id="ssList"></div>
+    </div>
+
+    <div class="card">
+      <h2>Door map &mdash; reach any carrier</h2>
+      <p class="sub">Region-independent: a carrier's alliance and surcharge behavior don't change by destination. <span style="color:var(--green)">Clean</span> = low/no fees, <span style="color:var(--gold)">scarce</span> = little partner space, <span style="color:var(--red)">heavy</span> = big surcharges.</p>
+
+      <div class="door">
+        <div class="door-head"><span class="name">Lufthansa / Swiss / Austrian</span><span class="alliance">Star</span></div>
+        <div class="route"><span class="cur">Amex</span><span class="cur">Citi</span><span class="arrow">&rarr;</span><span class="prog">Avianca LifeMiles</span><span class="flag clean">clean</span></div>
+        <div class="route"><span class="cur">Amex</span><span class="arrow">&rarr;</span><span class="prog">Aeroplan</span><span class="flag heavy">heavy</span></div>
+        <div class="route"><span style="font-size:12px;color:var(--gold)">⚠ Business space is scarce &amp; released late. Alaska cannot book Star Alliance at all.</span></div>
+      </div>
+
+      <div class="door">
+        <div class="door-head"><span class="name">United / ANA / Singapore / Turkish</span><span class="alliance">Star</span></div>
+        <div class="route"><span class="cur">Amex</span><span class="cur">Citi</span><span class="arrow">&rarr;</span><span class="prog">Avianca, Singapore, Turkish</span><span class="flag clean">clean</span></div>
+        <div class="route"><span class="nope">Not reachable with Alaska.</span></div>
+      </div>
+
+      <div class="door">
+        <div class="door-head"><span class="name">British Airways</span><span class="alliance">oneworld</span></div>
+        <div class="route"><span class="cur">Alaska</span><span class="cur">Amex</span><span class="cur">Citi</span><span class="arrow">&rarr;</span><span class="prog">Alaska / Avios / AAdvantage</span><span class="flag heavy">heavy</span></div>
+        <div class="route"><span style="font-size:12px;color:var(--txt-dim)">BA passes big surcharges through every door &mdash; prefer Iberia/Finnair metal instead.</span></div>
+      </div>
+
+      <div class="door">
+        <div class="door-head"><span class="name">Iberia / Finnair</span><span class="alliance">oneworld</span></div>
+        <div class="route"><span class="cur">Alaska</span><span class="cur">Amex</span><span class="cur">Citi</span><span class="arrow">&rarr;</span><span class="prog">Alaska / Avios / AAdvantage</span><span class="flag clean">clean</span></div>
+        <div class="route"><span style="font-size:12px;color:var(--txt-dim)">The smarter oneworld door &mdash; far lower surcharges than BA.</span></div>
+      </div>
+
+      <div class="door">
+        <div class="door-head"><span class="name">American Airlines</span><span class="alliance">oneworld</span></div>
+        <div class="route"><span class="cur">Citi</span><span class="arrow">&rarr;</span><span class="prog">AAdvantage</span><span class="flag clean">clean</span></div>
+        <div class="route"><span class="cur">Alaska</span><span class="arrow">&rarr;</span><span class="prog">Alaska (AA metal)</span><span class="flag clean">clean</span></div>
+        <div class="route"><span style="font-size:12px;color:var(--txt-faint)">Citi is the only currency that transfers to AAdvantage (premium card only).</span></div>
+      </div>
+
+      <div class="door">
+        <div class="door-head"><span class="name">Air France / KLM</span><span class="alliance">SkyTeam</span></div>
+        <div class="route"><span class="cur">Amex</span><span class="cur">Citi</span><span class="arrow">&rarr;</span><span class="prog">Flying Blue</span><span class="flag warn">moderate</span></div>
+        <div class="route"><span style="font-size:12px;color:var(--txt-dim)">Frequent monthly promo awards; watch surcharges but often a clean path.</span></div>
+      </div>
+
+      <div class="door">
+        <div class="door-head"><span class="name">Cathay / JAL / Qatar / Qantas</span><span class="alliance">oneworld</span></div>
+        <div class="route"><span class="cur">Alaska</span><span class="cur">Amex</span><span class="cur">Citi</span><span class="arrow">&rarr;</span><span class="prog">Alaska / Asia Miles / AAdvantage</span><span class="flag clean">clean</span></div>
+        <div class="route"><span style="font-size:12px;color:var(--txt-faint)">Alaska's published partner rates here are among the best in the world.</span></div>
+      </div>
+
+      <div class="door">
+        <div class="door-head"><span class="name">Starlux / Korean / Hawaiian</span><span class="alliance">non-alliance</span></div>
+        <div class="route"><span class="cur">Alaska</span><span class="arrow">&rarr;</span><span class="prog">Alaska (exclusive partners)</span><span class="flag clean">clean</span></div>
+        <div class="route"><span style="font-size:12px;color:var(--txt-faint)">Alaska is the only US program that can book Starlux.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEPS -->
+  <section class="panel" id="steps">
+    <div class="card">
+      <h2>Booking checklist</h2>
+      <p class="sub">Run these in order, every time. The point isn't memory &mdash; it's not skipping the irreversible step when a saver seat is about to vanish.</p>
+      <div id="stepList"></div>
+      <button class="reset" onclick="resetSteps()">Reset checklist</button>
+    </div>
+  </section>
+</div>
+
+<script>
+const KEY='rewards-data';
+let state={floor:1.5, steps:[false,false,false,false,false]};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s){state={...state,...s};}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+
+/* Tabs */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+  });
+});
+
+/* Floor */
+function renderFloor(){document.getElementById('floorVal').textContent=state.floor.toFixed(2)+' cpp';}
+function adjFloor(d){state.floor=Math.max(0.25,Math.round((state.floor+d)*100)/100);renderFloor();save();calcFlight();}
+
+/* Flight calc */
+function calcFlight(){
+  const miles=parseFloat(document.getElementById('f_miles').value);
+  const fees=parseFloat(document.getElementById('f_fees').value)||0;
+  const cash=parseFloat(document.getElementById('f_cash').value);
+  const r=document.getElementById('f_result');
+  const cppEl=document.getElementById('f_cpp');
+  const vEl=document.getElementById('f_verdict');
+  const nEl=document.getElementById('f_note');
+  if(!miles||miles<=0||isNaN(cash)){
+    r.className='result empty';cppEl.innerHTML='&mdash;<span class="unit">cpp</span>';
+    vEl.textContent='Enter the numbers';nEl.textContent='Cents of value per point redeemed.';return;
+  }
+  const cpp=((cash-fees)/miles)*100;
+  cppEl.innerHTML=cpp.toFixed(2)+'<span class="unit">cpp</span>';
+  let cls,v,n;
+  if(cpp>=4){cls='good';v='Exceptional value';n='A premium sweet spot. Book it before the seat moves.';}
+  else if(cpp>=2){cls='good';v='Strong — book it';n='Comfortably beats cash for a premium cabin. This is the target zone.';}
+  else if(cpp>=1.5){cls='mid';v='Decent';n='Worth it if this is the trip you actually want.';}
+  else if(cpp>=1){cls='mid';v='Marginal';n='Economy-ish value. Compare hard against just paying the fare.';}
+  else{cls='bad';v='Take the cash';n='Below the cash floor — paying cash and keeping the points wins.';}
+  if(cpp<state.floor && cls!=='bad'){cls='bad';v='Below your floor';n='This is under your '+state.floor.toFixed(2)+' cpp walk-away line. Lean toward cash.';}
+  r.className='result '+cls;vEl.textContent=v;nEl.textContent=n;
+}
+['f_miles','f_fees','f_cash'].forEach(id=>document.getElementById(id).addEventListener('input',calcFlight));
+
+/* Other calc */
+function calcOther(){
+  const pts=parseFloat(document.getElementById('o_pts').value);
+  const val=parseFloat(document.getElementById('o_val').value);
+  const r=document.getElementById('o_result');
+  const cppEl=document.getElementById('o_cpp');
+  const vEl=document.getElementById('o_verdict');
+  const nEl=document.getElementById('o_note');
+  if(!pts||pts<=0||isNaN(val)){
+    r.className='result empty';cppEl.innerHTML='&mdash;<span class="unit">cpp</span>';
+    vEl.textContent='Enter the numbers';nEl.textContent='Compared against the ~1 cpp cash baseline.';return;
+  }
+  const cpp=(val/pts)*100;
+  cppEl.innerHTML=cpp.toFixed(2)+'<span class="unit">cpp</span>';
+  let cls,v,n;
+  if(cpp>=1.5){cls='good';v='Above baseline';n='Better than cash — a reasonable use if you need it.';}
+  else if(cpp>=1){cls='mid';v='About cash — fine';n='Roughly the cash floor. Fine, but no better than statement credit.';}
+  else{cls='bad';v='Worse than cash';n='You\u2019d get more value redeeming these points for cash. Don\u2019t do this one.';}
+  r.className='result '+cls;vEl.textContent=v;nEl.textContent=n;
+}
+['o_pts','o_val'].forEach(id=>document.getElementById(id).addEventListener('input',calcOther));
+
+/* Steps */
+const STEPS=[
+  ['Confirm live award space','Verify the seat on the booking program\u2019s own site — search tools lag and show phantom space.'],
+  ['Screen the surcharges','Compare all-in (points + cash) across every door. Cheapest miles \u2260 cheapest trip.'],
+  ['Name-match exactly','Account name must match passport. Transfers are one-way and can\u2019t be undone.',true],
+  ['Transfer the exact amount','Only after space is confirmed. Never transfer speculatively.',true],
+  ['Book immediately','Hold the seat the moment points land — saver space disappears fast.']
+];
+function renderSteps(){
+  const el=document.getElementById('stepList');el.innerHTML='';
+  STEPS.forEach((s,i)=>{
+    const d=document.createElement('div');
+    d.className='step'+(state.steps[i]?' done':'');
+    d.innerHTML='<div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#0d0e10" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'+
+      '<div class="step-txt"><strong>'+(i+1)+'. '+s[0]+'</strong><span'+(s[2]?' class="crit"':'')+'>'+s[1]+'</span></div>';
+    d.addEventListener('click',()=>{state.steps[i]=!state.steps[i];save();renderSteps();});
+    el.appendChild(d);
+  });
+}
+function resetSteps(){state.steps=[false,false,false,false,false];save();renderSteps();}
+
+/* Region sweet spots */
+const REGIONS={
+  world:{title:'Marquee redemptions worldwide',sub:'The standout premium awards across the globe with your three currencies. Approximate one-way saver rates &mdash; confirm live before transferring.',spots:[
+    ['Cathay First, US → Hong Kong','~70K','Alaska','clean','~25 cpp and widely called the best premium award anywhere. Free one-way stopover included.'],
+    ['Qatar Qsuite, US → Doha','~70K','Alaska','clean','The world\u2019s top business class, surcharge-free via Alaska. Gateway onward to Europe, Africa, India.'],
+    ['JAL Business, US → Tokyo','~60K','Alaska','clean','Top-five product, no fuel surcharges, free stopover.'],
+    ['Lufthansa-group Business → Europe','varies','Amex / Citi','warn','Via Avianca LifeMiles (no surcharge) \u2014 but business space is scarce and released late.']
+  ]},
+  na:{title:'North America & Hawaii',sub:'Domestic is the one place cash often beats points \u2014 run short hops through the Flight tab before burning miles.',spots:[
+    ['Short-haul nonstop hops','~6\u201315K','Alaska / Amex (Avios)','clean','Distance-based Avios is cheap on short nonstops; Alaska/AA for the rest. Compare to cash \u2014 often a wash.'],
+    ['West Coast → Hawaii','~20\u201330K','Alaska','clean','Reliable mid-value redemption; Alaska\u2019s home turf post-Hawaiian merger.'],
+    ['Transcon business (A321/transcon J)','~25\u201350K','Citi (AAdvantage)','clean','JFK\u2013LAX/SFO premium cabins; check cash fare first.']
+  ]},
+  eu:{title:'Europe',sub:'The trap region you already hit. The winning move is avoiding surcharge-heavy doors, not chasing Lufthansa.',spots:[
+    ['Iberia / Finnair Business, US → Europe','~34\u201362K','Alaska / Amex (Avios) / Citi (AA)','clean','The smart oneworld door \u2014 skips BA\u2019s heavy surcharges entirely.'],
+    ['American Business, US → Europe','~57.5\u201375K','Citi (AAdvantage)','clean','Solid clean option on AA metal when saver space appears.'],
+    ['Air France / KLM Business','varies','Amex / Citi (Flying Blue)','warn','Frequent monthly Promo Rewards drop the price; watch the surcharge line.'],
+    ['Lufthansa / Swiss Business','varies','Amex / Citi (Avianca)','warn','Surcharge-free via LifeMiles, but space is scarce and late \u2014 don\u2019t plan around it.']
+  ]},
+  ap:{title:'Asia-Pacific',sub:'Your strongest region by far \u2014 Alaska\u2019s published partner chart is elite here, all surcharge-free with a free stopover.',spots:[
+    ['Cathay First, US → Hong Kong','~70K','Alaska','clean','The crown jewel. Business runs ~50K. Add a free stopover en route.'],
+    ['JAL Business, US → Tokyo','~60K','Alaska','clean','First class ~70\u201385K. No fuel surcharges.'],
+    ['Qantas Business, US → Australia','~55K','Alaska','clean','One of the best ways to reach Australia in a flat bed.'],
+    ['Starlux Business (Taipei)','varies','Alaska','clean','Alaska is the only US program that can book Starlux at all.'],
+    ['ANA / Singapore Business (Star)','varies','Amex / Citi','clean','Your Star Alliance route into Asia when oneworld space is dry.']
+  ]},
+  mea:{title:'Middle East & Africa',sub:'Qatar is the anchor; it doubles as a connection hub deeper into Africa, India and the Maldives.',spots:[
+    ['Qatar Qsuite, US → Doha','~70K','Alaska','clean','Surcharge-free via Alaska \u2014 the cleanest path. Free stopover in Doha.'],
+    ['Qatar Qsuite (alt door)','~70K + ~$200','Citi (AAdvantage)','warn','Same seat via AAdvantage, but carries a fuel surcharge each way.'],
+    ['Turkish Business → Africa','varies','Amex / Citi (Turkish)','warn','Star Alliance access into Africa via Istanbul.'],
+    ['Royal Air Maroc → Africa','varies','Alaska','clean','oneworld door into West/North Africa.']
+  ]},
+  latam:{title:'Latin America',sub:'Short distances and cheap charts make this a high-value, low-mileage region.',spots:[
+    ['Avianca Business → Central/South America','varies','Amex / Citi (LifeMiles)','clean','Star Alliance, surcharge-free. Note LifeMiles raised some rates in 2026 \u2014 verify.'],
+    ['American / LATAM, US → South America','varies','Citi (AAdvantage)','clean','oneworld coverage deep into the continent.'],
+    ['Copa (Star) via Panama','varies','Amex / Citi','clean','Useful connections across the region on Star metal.']
+  ]}
+};
+function renderSpots(r){
+  const d=REGIONS[r];
+  document.getElementById('ssTitle').textContent=d.title;
+  document.getElementById('ssSub').innerHTML=d.sub;
+  const el=document.getElementById('ssList');el.innerHTML='';
+  d.spots.forEach(s=>{
+    const div=document.createElement('div');div.className='spot';
+    div.innerHTML='<div class="spot-head"><span class="name">'+s[0]+'</span><span class="miles">'+s[1]+'</span></div>'+
+      '<div class="route"><span class="cur">'+s[2].split(' / ').join('</span><span class="cur">')+'</span><span class="flag '+s[3]+'">'+
+      (s[3]==='clean'?'clean':s[3]==='heavy'?'heavy':'caution')+'</span></div>'+
+      '<div class="note'+(s[3]==='warn'?' warnote':'')+'">'+s[4]+'</div>';
+    el.appendChild(div);
+  });
+}
+document.querySelectorAll('.rchip').forEach(c=>{
+  c.addEventListener('click',()=>{
+    document.querySelectorAll('.rchip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');renderSpots(c.dataset.r);
+  });
+});
+
+renderFloor();renderSteps();renderSpots('world');calcFlight();calcOther();
+</script>
+</body>
+</html>
